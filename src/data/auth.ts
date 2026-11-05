@@ -23,16 +23,17 @@ export async function login(password: string): Promise<Account | null> {
   const pw = password.trim();
   if (!pw) return null;
   const rows = await fetchSheet(ACCOUNT_GID);
-  if (rows.length < 2) return null;
-  const head = rows[0].map((h) => h.trim());
+  // 標題列通常是第一列；若上方有空列或標題，往下找含「密碼」的那一列
+  const hi = rows.findIndex((r, i) => i < 6 && r.some((c) => c.trim() === '密碼'));
+  if (hi < 0) throw new Error('找不到「密碼」欄位，請確認分頁第一列的欄位名稱');
+  const head = rows[hi].map((h) => h.trim());
   const pwCol = head.findIndex((h) => h === '密碼');
   const roleCol = head.findIndex((h) => h === '使用者');
-  if (pwCol < 0) throw new Error('使用者密碼分頁缺少「密碼」欄位');
-  const pageCols = head
+    const pageCols = head
     .map((h, i) => ({ i, id: PAGE_HEADERS[h] }))
     .filter((x): x is { i: number; id: PageId } => !!x.id);
 
-  for (const r of rows.slice(1)) {
+  for (const r of rows.slice(hi + 1)) {
     if ((r[pwCol] ?? '').trim() !== pw) continue;
     return {
       role: roleCol >= 0 ? (r[roleCol] ?? '').trim() : '',
