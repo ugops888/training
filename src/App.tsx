@@ -1,5 +1,7 @@
-import { useState, useCallback } from 'react';
-import { RefreshCw, CheckCircle2, AlertCircle } from 'lucide-react';
+import { useState, useCallback, useEffect } from 'react';
+import { RefreshCw, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import LoginPage from './components/LoginPage';
+import { login, saveSession, loadSession, clearSession, type Account } from './data/auth';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import DirectDashboardPage from './components/DirectDashboardPage';
@@ -10,22 +12,21 @@ import { fetchFranchiseData, type FranchiseData } from './data/sheetData';
 import { useCachedData, invalidateAll } from './data/swrCache';
 import type { PageId } from './types';
 
-const pageMeta: Record<PageId, { title: string; subtitle: string }> = {
+const COPYRIGHT_NOTICE = '《聯發國際餐飲事業股份有限公司著作權所有，侵害必究，機密資料禁止外流》';
+const INTERNAL_NOTICE = '數據供內部訓練管理使用';
+
+const pageMeta: Record<PageId, { title: string }> = {
   direct: {
     title: '直營訓練儀表板',
-    subtitle: '直營門市教育訓練績效與排程總覽',
   },
   franchise: {
     title: '加盟訓練儀表板',
-    subtitle: '加盟體系教育訓練績效與排程總覽',
   },
   student: {
     title: '學員歷史查詢',
-    subtitle: '依員工編號或姓名查詢夥伴的完整培訓歷程',
   },
   training: {
     title: '線上訓練平台',
-    subtitle: '瀏覽課程清單，線上觀看教學影片、圖片與 PDF',
   },
 };
 
@@ -36,7 +37,55 @@ type ToastState =
   | { visible: true; type: 'error'; message: string };
 
 export default function App() {
-  const [page, setPage] = useState<PageId>('training');
+  const [account, setAccount] = useState<Account | null>(null);
+  const [checking, setChecking] = useState(() => !!loadSession());
+
+  // 同一個瀏覽分頁內重新整理時，用已記住的密碼重新驗證（權限以試算表最新內容為準）
+  useEffect(() => {
+    const saved = loadSession();
+    if (!saved) return;
+    login(saved)
+      .then((acc) => {
+        if (acc) setAccount(acc);
+        else clearSession();
+      })
+      .catch(() => clearSession())
+      .finally(() => setChecking(false));
+  }, []);
+
+  const handleLogin = useCallback(async (pw: string): Promise<string | null> => {
+    try {
+      const acc = await login(pw);
+      if (!acc) return '密碼錯誤，請再試一次';
+      saveSession(pw.trim());
+      setAccount(acc);
+      return null;
+    } catch {
+      return '無法驗證密碼，請檢查網路連線後再試';
+    }
+  }, []);
+
+  const handleLogout = useCallback(() => {
+    clearSession();
+    setAccount(null);
+  }, []);
+
+  if (checking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#f5f8f6] text-forest-500">
+        <Loader2 className="w-6 h-6 animate-spin" />
+      </div>
+    );
+  }
+  if (!account) return <LoginPage onSubmit={handleLogin} />;
+  return <Main account={account} onLogout={handleLogout} />;
+}
+
+function Main({ account, onLogout }: { account: Account; onLogout: () => void }) {
+  const allPages: PageId[] = ['training', 'direct', 'franchise', 'student'];
+  const allowed = allPages.filter((p) => account.pages.includes(p));
+  const [pageState, setPage] = useState<PageId>(allowed[0] ?? 'training');
+  const page: PageId = allowed.includes(pageState) ? pageState : allowed[0] ?? 'training';
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [toast, setToast] = useState<ToastState>({ visible: false });
 
@@ -64,6 +113,7 @@ export default function App() {
   }, []);
 
   const meta = pageMeta[page];
+  const notice = page === 'training' ? COPYRIGHT_NOTICE : INTERNAL_NOTICE;
 
   return (
     <div className="min-h-screen bg-[#f5f8f6] flex">
@@ -72,20 +122,26 @@ export default function App() {
         onChange={setPage}
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        allowed={allowed}
+        role={account.role}
+        onLogout={onLogout}
       />
       <div className="flex-1 flex flex-col min-w-0">
         <Header
           title={meta.title}
-          subtitle={meta.subtitle}
+          notice={notice}
           onMenuClick={() => setSidebarOpen(true)}
           onRefresh={handleRefresh}
         />
         <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-x-hidden">
           <div key={page} className="animate-fade-in">
-            {page === 'direct' && (
+            {allowed.length === 0 && (
+              <p className="text-center text-forest-600 py-20">此帳號尚未開放任何頁面，請聯絡管理員。</p>
+            )}
+            {allowed.includes('direct') && page === 'direct' && (
               <DirectDashboardPage />
             )}
-            {page === 'franchise' && (
+            {allowed.includes('franchise') && page === 'franchise' && (
               franchiseLoading && !franchise ? (
                 <FranchiseLoading />
               ) : franchiseError && !franchise ? (
@@ -94,12 +150,12 @@ export default function App() {
                 <FranchiseDashboardPage data={franchise} />
               ) : null
             )}
-            {page === 'training' && <TrainingPlatformPage />}
-            {page === 'student' && <StudentHistoryPage />}
+            {allowed.includes('training') && page === 'training' && <TrainingPlatformPage />}
+            {allowed.includes('student') && page === 'student' && <StudentHistoryPage />}
           </div>
         </main>
         <footer className="px-4 md:px-8 py-4 text-center text-xs text-forest-400 border-t border-forest-50 bg-white/60">
-          企業教育訓練平台 · 內部訓練管理使用 · 數據由各區培訓負責人每週提供
+          {notice}
         </footer>
       </div>
 

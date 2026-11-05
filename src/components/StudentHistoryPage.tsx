@@ -100,7 +100,7 @@ export default function StudentHistoryPage() {
           <h2 className="font-semibold text-forest-900">學員歷史查詢</h2>
         </div>
         <p className="text-sm text-forest-500 mb-4">
-          輸入員工編號（如 LF0039）或姓名，查詢夥伴的門市、職位、入離職日、課程與考試紀錄。
+          輸入員工編號或姓名，進行查詢。
         </p>
         <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
@@ -109,7 +109,7 @@ export default function StudentHistoryPage() {
               type="text"
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
-              placeholder="輸入員工編號或姓名（例如：LF0039、林志宗）"
+              placeholder="輸入員工編號或姓名"
               className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-forest-200 bg-forest-50/40 text-sm text-forest-800 placeholder:text-forest-400 focus:outline-none focus:ring-2 focus:ring-mint-400 focus:border-transparent transition"
             />
           </div>

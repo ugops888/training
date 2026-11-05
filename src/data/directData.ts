@@ -96,12 +96,16 @@ async function fetchCourseDefs(): Promise<CourseExamDef[]> {
   const promCol = colIdx(['晉升條件', '晉升']);
   const videoCol = colIdx(['教材網址', '教材連結', '教材', '影片網址', '影片連結', 'videoUrl', '影片', 'YouTube', '網址']);
   const descCol = colIdx(['課程說明', '說明', '課程介紹', '介紹', '內容說明']);
+  // 「是否開課」欄位（核取方塊）：打勾（TRUE）的課程才顯示；試算表沒有這一欄時，全部課程都顯示
+  const openCol = colIdx(['是否開課', '開課']);
+  const isOpen = (v: string) => /^(true|是|v|y|yes|1|✓|✔|☑|開課|開)$/i.test(v.trim());
 
   for (let i = 1; i < rows.length; i++) {
     const r = rows[i];
     if (!r) continue;
     const rawName = (r[nameCol] ?? '').trim();
     if (!rawName) continue;
+    if (openCol >= 0 && !isOpen(r[openCol] ?? '')) continue;
     const category = (r[catCol] ?? '').trim();
     const hoursRaw = (r[hoursCol] ?? '').trim();
     const hours = parseFloat(hoursRaw) || 0;

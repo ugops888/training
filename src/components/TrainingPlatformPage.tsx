@@ -131,8 +131,6 @@ export default function TrainingPlatformPage() {
     );
   }
 
-  const videoCount = (courses ?? []).filter((c) => parseMaterials(c.videoUrl).length > 0).length;
-
   return (
     <div className="space-y-4">
       <div className="bg-white rounded-2xl shadow-card border border-forest-50 p-4 md:p-5">
@@ -147,12 +145,6 @@ export default function TrainingPlatformPage() {
               className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-forest-200 bg-forest-50/40 text-sm text-forest-800 placeholder:text-forest-400 focus:outline-none focus:ring-2 focus:ring-mint-400 focus:border-transparent transition"
             />
           </div>
-          <p className="text-xs text-forest-500 lg:shrink-0">
-            共 {flatCourses.length} 門課程
-            {videoCount > 0 && (
-              <span className="ml-2 text-mint-600">· {videoCount} 門含教材</span>
-            )}
-          </p>
         </div>
       </div>
 

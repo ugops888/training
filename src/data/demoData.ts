@@ -95,7 +95,9 @@ const POSTER_BRAND = svgPoster('品牌理念與門市動線', ['認識品牌故�
 const POSTER_TEA = svgPoster('茶湯萃取溫度對照', ['綠茶：75–80°C，約 2 分鐘', '烏龍：90–95°C，約 3 分鐘', '紅茶：95–100°C，約 4 分鐘'], '#1f8657');
 const PDF_POS = demoPdf('POS Operation Handout (Demo)', ['1. Open the shift and count the cash drawer.', '2. Enter the order and confirm the items.', '3. Choose the payment method and print the receipt.', '4. Close the shift and check the daily report.']);
 const PDF_DRINK = demoPdf('Signature Drink Checklist (Demo)', ['1. Check the tea base temperature.', '2. Measure toppings with the standard scoop.', '3. Seal the cup and confirm the label.']);
-const COURSE_HEADER = ['課程名稱', '課程類別', '訓練時數', '及格門檻', '是否必修', '晉升條件', '教材網址', '課程說明'];
+// 示範：這兩門課「是否開課」未勾選，不會顯示在網頁上
+const CLOSED_DEMO = new Set(['7.備料區標準作業', '10.店長領導力']);
+const COURSE_HEADER = ['是否開課', '課程名稱', '課程類別', '訓練時數', '及格門檻', '是否必修', '晉升條件', '教材網址', '課程說明'];
 const COURSE_DEFS: { name: string; cat: string; hours: number; pass: string; req: string; prom: string; video: string; desc: string }[] = [
   { name: '1.新人入門與品牌認識', cat: '基礎課程', hours: 2, pass: '', req: '必修', prom: '基礎', video: `${VIDEO} ${POSTER_BRAND}`, desc: '認識品牌理念、門市動線與基本禮儀，是所有新夥伴的第一堂課。' },
   { name: '2.飲品製作基礎', cat: '基礎課程', hours: 4, pass: '', req: '必修', prom: '基礎', video: VIDEO, desc: '標準配方、量具使用與出杯流程。' },
@@ -274,11 +276,18 @@ const SHEETS: Record<string, Rows> = {
   '552384353': signRows,
   '2124489402': [
     COURSE_HEADER,
-    ...COURSE_DEFS.map((d) => [d.name, d.cat, String(d.hours), d.pass, d.req, d.prom, d.video, d.desc]),
+    ...COURSE_DEFS.map((d) => [CLOSED_DEMO.has(d.name) ? 'FALSE' : 'TRUE', d.name, d.cat, String(d.hours), d.pass, d.req, d.prom, d.video, d.desc]),
   ],
   '1513816467': periodMapRows,
   '1745615764': franchiseExamRows,
   '1051538313': enrollRows,
+  '667663661': [
+    ['使用者', '密碼', '線上訓練平台', '直營訓練儀表板', '加盟訓練儀表板', '學員歷史查詢'],
+    ['管理員', 'admin', 'TRUE', 'TRUE', 'TRUE', 'TRUE'],
+    ['督導', 'super', 'TRUE', 'TRUE', 'FALSE', 'FALSE'],
+    ['店長', 'store', 'TRUE', 'FALSE', 'FALSE', 'FALSE'],
+    ['學員', 'learn', 'TRUE', 'FALSE', 'FALSE', 'FALSE'],
+  ],
   '593792740': [['門市', '區域'], ...STORES.map((s) => [`UG${s}店`, '直營'])],
 };
 

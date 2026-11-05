@@ -1,4 +1,4 @@
-import { LayoutDashboard, Store, GraduationCap, UserSearch, PlayCircle, X } from 'lucide-react';
+import { LayoutDashboard, Store, GraduationCap, UserSearch, PlayCircle, X, LogOut } from 'lucide-react';
 import type { PageId } from '../types';
 
 interface SidebarProps {
@@ -6,6 +6,9 @@ interface SidebarProps {
   onChange: (page: PageId) => void;
   open: boolean;
   onClose: () => void;
+  allowed: PageId[];
+  role: string;
+  onLogout: () => void;
 }
 
 const items: { id: PageId; label: string; icon: typeof LayoutDashboard; desc: string }[] = [
@@ -15,7 +18,7 @@ const items: { id: PageId; label: string; icon: typeof LayoutDashboard; desc: st
   { id: 'student', label: '學員歷史查詢', icon: UserSearch, desc: '依員編 / 姓名查詢夥伴' },
 ];
 
-export default function Sidebar({ current, onChange, open, onClose }: SidebarProps) {
+export default function Sidebar({ current, onChange, open, onClose, allowed, role, onLogout }: SidebarProps) {
   return (
     <>
       {open && (
@@ -50,7 +53,7 @@ export default function Sidebar({ current, onChange, open, onClose }: SidebarPro
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-1">
-          {items.map((item) => {
+          {items.filter((i) => allowed.includes(i.id)).map((item) => {
             const Icon = item.icon;
             const active = current === item.id;
             return (
@@ -82,6 +85,23 @@ export default function Sidebar({ current, onChange, open, onClose }: SidebarPro
         </nav>
 
         <div className="px-6 py-5 border-t border-forest-700/60">
+          {role && (
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <p className="text-sm text-forest-100 truncate">目前身分：<span className="font-semibold text-white">{role}</span></p>
+              <button
+                onClick={onLogout}
+                className="inline-flex items-center gap-1.5 shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold bg-forest-700/70 text-forest-50 hover:bg-forest-700"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                登出
+              </button>
+            </div>
+          )}
+          {!role && (
+            <button onClick={onLogout} className="mb-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-forest-700/70 text-forest-50 hover:bg-forest-700">
+              <LogOut className="w-3.5 h-3.5" />登出
+            </button>
+          )}
           <div className="rounded-xl bg-forest-700/50 p-4">
             <p className="text-xs text-forest-200 leading-relaxed">如資料有異常請通知管理員</p>
           </div>
