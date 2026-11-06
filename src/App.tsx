@@ -3,6 +3,7 @@ import { RefreshCw, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import LoginPage from './components/LoginPage';
 import { login, restoreSession, loadSession, clearSession, type Account } from './data/auth';
 import { setUnauthorizedHandler } from './data/api';
+import { initSiteImages } from './data/siteImages';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import DirectDashboardPage from './components/DirectDashboardPage';
@@ -16,21 +17,6 @@ import type { PageId } from './types';
 const COPYRIGHT_NOTICE = '《聯發國際餐飲事業股份有限公司著作權所有，侵害必究，機密資料禁止外流》';
 const INTERNAL_NOTICE = '數據供內部訓練管理使用';
 
-const pageMeta: Record<PageId, { title: string }> = {
-  direct: {
-    title: '直營訓練儀表板',
-  },
-  franchise: {
-    title: '加盟訓練儀表板',
-  },
-  student: {
-    title: '學員歷史查詢',
-  },
-  training: {
-    title: '線上訓練平台',
-  },
-};
-
 type ToastState =
   | { visible: false }
   | { visible: true; type: 'loading'; message: string }
@@ -40,6 +26,10 @@ type ToastState =
 export default function App() {
   const [account, setAccount] = useState<Account | null>(null);
   const [checking, setChecking] = useState(() => !!loadSession());
+
+  useEffect(() => {
+    initSiteImages();
+  }, []);
 
   // 同一個瀏覽分頁內重新整理時，用已記住的憑證還原登入（權限以試算表最新內容為準）
   useEffect(() => {
@@ -125,7 +115,6 @@ function Main({ account, onLogout }: { account: Account; onLogout: () => void })
       });
   }, []);
 
-  const meta = pageMeta[page];
   const notice = page === 'training' ? COPYRIGHT_NOTICE : INTERNAL_NOTICE;
 
   return (
@@ -138,13 +127,12 @@ function Main({ account, onLogout }: { account: Account; onLogout: () => void })
         allowed={allowed}
         role={account.role}
         onLogout={onLogout}
+        onRefresh={handleRefresh}
       />
       <div className="flex-1 flex flex-col min-w-0">
         <Header
-          title={meta.title}
           notice={notice}
           onMenuClick={() => setSidebarOpen(true)}
-          onRefresh={handleRefresh}
         />
         <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-x-hidden">
           <div key={page} className="animate-fade-in">

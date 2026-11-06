@@ -11,12 +11,15 @@
 
 // ===== 設定 =====
 var ACCOUNT_GID = 2138174619;   // 「教育訓練管理權限」分頁的 gid（網址最後 gid= 的數字）
+var SITE_GID = 266241929;       // 「網站設定」分頁的 gid（放 LOGO 與登入底圖的雲端硬碟連結）
+var MAX_IMAGE_BYTES = 6 * 1024 * 1024; // 單張圖片大小上限
 var TOKEN_HOURS = 8;            // 登入有效時數
 var MAX_FAILS_PER_10MIN = 40;   // 10 分鐘內密碼錯誤總次數上限（超過先暫停登入）
 
 // 欄位名稱（第一列）對應的頁面
 var PAGE_HEADERS = {
   '線上訓練平台': 'training',
+  '線上學習課程': 'training',
   '直營訓練儀表板': 'direct',
   '加盟訓練儀表板': 'franchise',
   '學員歷史查詢': 'student'
@@ -42,6 +45,8 @@ function doPost(e) {
   try {
     var req = JSON.parse((e && e.postData && e.postData.contents) || '{}');
     if (req.action === 'login') return json_(login_(String(req.password || '')));
+    if (req.action === 'siteConfig') return json_(siteConfig_());
+    if (req.action === 'siteImage') return json_(siteImage_(String(req.which || '')));
     if (req.action === 'me') return json_(me_(String(req.token || '')));
     if (req.action === 'sheet') return json_(sheet_(String(req.token || ''), String(req.gid || '')));
     return json_({ ok: false, error: '不支援的操作' });
@@ -115,6 +120,58 @@ function filterCourses_(rows, role) {
   var col = rows[hi].map(norm_).indexOf(norm_(role));
   if (col < 0) return rows;
   return rows.filter(function (row, i) { return i <= hi || isChecked_(row[col]); });
+}
+
+// ===== 網站圖片（登入前就要顯示，所以不需要 token；圖片來源只取自「網站設定」分頁） =====
+// 分頁格式：A 欄放名稱（首頁畫面底圖 / logo），B 欄放 Google 雲端硬碟圖片連結。
+function siteFiles_() {
+  var out = { login: null, logo: null };
+  var sh = findSheet_(SITE_GID);
+  if (!sh) return out;
+  var values = sh.getDataRange().getDisplayValues();
+  for (var i = 0; i < values.length; i++) {
+    var label = norm_(values[i][0]).toLowerCase();
+    var id = driveId_(values[i][1]);
+    if (!id) continue;
+    if (label === '首頁畫面底圖' || label === '登入畫面底圖' || label === '登入圖片') out.login = id;
+    else if (label === 'logo' || label === '品牌logo') out.logo = id;
+  }
+  return out;
+}
+
+function driveId_(url) {
+  var m = String(url || '').match(/\/d\/([a-zA-Z0-9_-]{10,})/) || String(url || '').match(/[?&]id=([a-zA-Z0-9_-]{10,})/);
+  return m ? m[1] : '';
+}
+
+// 回傳每張圖的「版本代碼」（檔案 ID + 最後修改時間），網站用它判斷有沒有換圖，沒換就不重新下載
+function siteConfig_() {
+  var files = siteFiles_();
+  var res = { ok: true, login: null, logo: null };
+  ['login', 'logo'].forEach(function (k) {
+    if (!files[k]) return;
+    try {
+      res[k] = files[k] + ':' + DriveApp.getFileById(files[k]).getLastUpdated().getTime();
+    } catch (e) { /* 找不到檔案或沒有權限：當作沒設定 */ }
+  });
+  return res;
+}
+
+function siteImage_(which) {
+  if (which !== 'login' && which !== 'logo') return { ok: false, error: '不支援的圖片' };
+  var id = siteFiles_()[which];
+  if (!id) return { ok: false, error: '尚未設定' };
+  var file = DriveApp.getFileById(id);
+  var blob = file.getBlob();
+  var mime = blob.getContentType() || '';
+  if (mime.indexOf('image/') !== 0) return { ok: false, error: '不是圖片檔' };
+  if (blob.getBytes().length > MAX_IMAGE_BYTES) return { ok: false, error: '圖片超過 6MB，請縮小後再用' };
+  return { ok: true, mime: mime, data: Utilities.base64Encode(blob.getBytes()) };
+}
+
+// 第一次部署時，在編輯器選這個函式按「執行」，授權後端讀取你的雲端硬碟圖片
+function authorize() {
+  DriveApp.getRootFolder();
 }
 
 // ===== 權限讀取 =====

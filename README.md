@@ -14,6 +14,24 @@ export const USE_DEMO_DATA = true;   // true：虛擬資料　false：登入後�
 
 正式發布前請改成 `false`，並在同一個檔案填入 `APPS_SCRIPT_URL`。虛擬資料的姓名、成績都是隨機產生的範例。
 
+## 品牌 LOGO 與登入圖片
+
+**日常更換：改試算表的「網站設定」分頁**（不用碰 GitHub）
+
+| A 欄（名稱） | B 欄（圖片連結） |
+|---|---|
+| 首頁畫面底圖 | https://drive.google.com/file/d/…/view |
+| logo | https://drive.google.com/file/d/…/view |
+
+- 把圖片上傳到自己的 Google 雲端硬碟，複製檔案連結貼到 B 欄。檔案不需要公開分享，由後端（Apps Script）以你的身分讀取。
+- 想換圖：改 B 欄連結，或在雲端硬碟對同一個檔案「管理版本 → 上傳新版本」。網站下次開啟時會自動更新，不用重新部署。
+- 刪掉那一列，就會回到下方 `public` 資料夾的圖片。
+- 單張圖片請在 6MB 內；LOGO 建議透明背景 PNG，登入底圖建議橫式、寬 1600px 左右。
+
+**備用圖片：`public` 資料夾**
+
+網站找不到「網站設定」指定的圖片時，會使用 `public/logo.png`、`public/login-image.jpg`；兩者都沒有就顯示預設圖示與插圖。想用別的檔名，改 `src/data/config.ts` 的 `LOGO_FILE`、`LOGIN_IMAGE_FILE`。
+
 ## 登入與密碼管理
 
 開啟網址會先看到登入頁，輸入密碼後才會出現側邊選單。密碼與可看頁面由 Google 試算表的「教育訓練管理權限」分頁管理：
@@ -22,7 +40,7 @@ export const USE_DEMO_DATA = true;   // true：虛擬資料　false：登入後�
 |---|---|---|---|---|---|
 | 管理員 | （自訂） | ☑ | ☑ | ☑ | ☑ |
 
-- 新增或修改一列即可新增帳號或調整密碼，核取方塊打勾的頁面才會出現在該使用者的選單。
+- 新增或修改一列即可新增帳號或調整密碼，核取方塊打勾的頁面才會出現在該使用者的選單。「線上訓練平台」欄位的名稱，寫「線上學習課程」也可以。
 - 欄位名稱需與上表一致；密碼相同時以最上面一列為準。
 - 驗證與資料讀取都由 Google Apps Script 後端處理，**試算表不需要、也不應該「發佈到網路」**。安裝步驟見 `apps-script/安裝說明.md`。
 - 預覽模式（`USE_DEMO_DATA = true`）不連後端，測試密碼：admin、super、store、learn。

@@ -1,3 +1,8 @@
+import { useState } from 'react';
+import { RefreshCw } from 'lucide-react';
+import { LOGO_FILE } from '../data/config';
+import { assetUrl } from '../assets';
+import { useSiteImages } from '../data/siteImages';
 import { LayoutDashboard, Store, GraduationCap, UserSearch, PlayCircle, X, LogOut } from 'lucide-react';
 import type { PageId } from '../types';
 
@@ -9,16 +14,21 @@ interface SidebarProps {
   allowed: PageId[];
   role: string;
   onLogout: () => void;
+  onRefresh: () => void;
 }
 
 const items: { id: PageId; label: string; icon: typeof LayoutDashboard; desc: string }[] = [
-  { id: 'training', label: '線上訓練平台', icon: PlayCircle, desc: '線上課程教材瀏覽' },
+  { id: 'training', label: '線上學習課程', icon: PlayCircle, desc: '線上課程教材瀏覽' },
   { id: 'direct', label: '直營訓練儀表板', icon: Store, desc: '直營門市培訓總覽' },
   { id: 'franchise', label: '加盟訓練儀表板', icon: LayoutDashboard, desc: '加盟體系培訓總覽' },
   { id: 'student', label: '學員歷史查詢', icon: UserSearch, desc: '依員編 / 姓名查詢夥伴' },
 ];
 
-export default function Sidebar({ current, onChange, open, onClose, allowed, role, onLogout }: SidebarProps) {
+export default function Sidebar({ current, onChange, open, onClose, allowed, role, onLogout, onRefresh }: SidebarProps) {
+  const site = useSiteImages();
+  const logoSrc = site.logo ?? assetUrl(LOGO_FILE);
+  const [failedLogo, setFailedLogo] = useState('');
+  const logoFailed = failedLogo === logoSrc;
   return (
     <>
       {open && (
@@ -35,9 +45,20 @@ export default function Sidebar({ current, onChange, open, onClose, allowed, rol
       >
         <div className="flex items-center justify-between px-6 py-5 border-b border-forest-700/60">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-mint-400 text-forest-900 flex items-center justify-center shadow-md">
-              <GraduationCap className="w-6 h-6" strokeWidth={2.2} />
-            </div>
+            {logoFailed ? (
+              <div className="w-10 h-10 rounded-xl bg-mint-400 text-forest-900 flex items-center justify-center shadow-md">
+                <GraduationCap className="w-6 h-6" strokeWidth={2.2} />
+              </div>
+            ) : (
+              <div className="h-11 min-w-11 max-w-[5.5rem] px-1.5 rounded-xl bg-white flex items-center justify-center shadow-md overflow-hidden">
+                <img
+                  src={logoSrc}
+                  alt="品牌 LOGO"
+                  className="max-h-9 w-auto object-contain"
+                  onError={() => setFailedLogo(logoSrc)}
+                />
+              </div>
+            )}
             <div className="leading-tight">
               <p className="text-base font-semibold tracking-wide">教育訓練平台</p>
               <p className="text-xs text-forest-200">Training Dashboard</p>
@@ -102,8 +123,17 @@ export default function Sidebar({ current, onChange, open, onClose, allowed, rol
               <LogOut className="w-3.5 h-3.5" />登出
             </button>
           )}
-          <div className="rounded-xl bg-forest-700/50 p-4">
-            <p className="text-xs text-forest-200 leading-relaxed">如資料有異常請通知管理員</p>
+          <div className="flex items-stretch gap-2">
+            <div className="flex-1 min-w-0 rounded-xl bg-forest-700/50 px-3 py-2.5 flex items-center">
+              <p className="text-xs text-forest-200 leading-relaxed">如資料有異常<br />請通知管理員</p>
+            </div>
+            <button
+              onClick={onRefresh}
+              className="shrink-0 inline-flex flex-col items-center justify-center gap-1 px-3 rounded-xl bg-mint-500 text-white text-xs font-semibold shadow-card hover:bg-mint-600 transition-colors"
+            >
+              <RefreshCw className="w-4 h-4" />
+              <span className="whitespace-nowrap">更新數據</span>
+            </button>
           </div>
         </div>
       </aside>

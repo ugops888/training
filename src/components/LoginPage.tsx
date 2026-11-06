@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import { GraduationCap, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
-import { USE_DEMO_DATA } from '../data/config';
+import { USE_DEMO_DATA, LOGIN_IMAGE_FILE } from '../data/config';
+import { assetUrl } from '../assets';
+import { useSiteImages } from '../data/siteImages';
 
 interface LoginPageProps {
   onSubmit: (password: string) => Promise<string | null>; // 回傳錯誤訊息，成功回傳 null
@@ -52,6 +54,10 @@ export default function LoginPage({ onSubmit }: LoginPageProps) {
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const site = useSiteImages();
+  const imgSrc = site.login ?? assetUrl(LOGIN_IMAGE_FILE);
+  const [failedImg, setFailedImg] = useState('');
+  const imgFailed = failedImg === imgSrc;
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -71,13 +77,24 @@ export default function LoginPage({ onSubmit }: LoginPageProps) {
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row bg-[#f5f8f6]">
-      <section className="relative lg:w-1/2 bg-forest-800 text-white flex flex-col items-center justify-center px-8 py-10 lg:py-0 overflow-hidden">
-        <div className="hidden sm:block w-full max-w-xl"><Hero /></div>
-        <div className="sm:hidden mb-2 w-16 h-16 rounded-2xl bg-mint-400 text-forest-900 flex items-center justify-center">
-          <GraduationCap className="w-9 h-9" />
-        </div>
-        <p className="mt-2 lg:mt-0 text-sm text-forest-200 tracking-widest">Training Dashboard</p>
-      </section>
+      {imgFailed ? (
+        <section className="relative lg:w-1/2 bg-forest-800 text-white flex flex-col items-center justify-center px-8 py-10 lg:py-0 overflow-hidden">
+          <div className="hidden sm:block w-full max-w-xl"><Hero /></div>
+          <div className="sm:hidden mb-2 w-16 h-16 rounded-2xl bg-mint-400 text-forest-900 flex items-center justify-center">
+            <GraduationCap className="w-9 h-9" />
+          </div>
+          <p className="mt-2 lg:mt-0 text-sm text-forest-200 tracking-widest">Training Dashboard</p>
+        </section>
+      ) : (
+        <section className="relative lg:w-1/2 h-56 sm:h-72 lg:h-auto bg-forest-800 overflow-hidden">
+          <img
+            src={imgSrc}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+            onError={() => setFailedImg(imgSrc)}
+          />
+        </section>
+      )}
 
       <section className="flex-1 flex flex-col items-center justify-center px-6 py-10">
         <form onSubmit={submit} className="w-full max-w-sm">

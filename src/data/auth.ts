@@ -10,6 +10,7 @@ export interface Account {
 
 const PAGE_HEADERS: Record<string, PageId> = {
   線上訓練平台: 'training',
+  線上學習課程: 'training',
   直營訓練儀表板: 'direct',
   加盟訓練儀表板: 'franchise',
   學員歷史查詢: 'student',
