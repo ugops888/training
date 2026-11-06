@@ -22,6 +22,8 @@ var PAGE_HEADERS = {
   '學員歷史查詢': 'student'
 };
 
+var COURSE_LIST_GID = '2124489402'; // 「課程與考試清單」：依身分過濾課程
+
 // 每個資料分頁（gid）可以被哪些頁面權限讀取；沒列在這裡的分頁（包含密碼分頁）一律不提供
 var SHEET_ACCESS = {
   '2124489402': ['training', 'direct', 'franchise', 'student'], // 課程與考試清單
@@ -98,7 +100,21 @@ function sheet_(token, gid) {
   var sh = findSheet_(Number(gid));
   if (!sh) return { ok: false, error: '找不到分頁 gid=' + gid };
   var rows = sh.getDataRange().getDisplayValues();
+  if (gid === COURSE_LIST_GID) rows = filterCourses_(rows, acc.role);
   return { ok: true, rows: rows };
+}
+
+// 課程清單若有與「使用者」同名的欄位，只留下該欄打勾的課程；沒有該身分的欄位則全部保留
+function filterCourses_(rows, role) {
+  if (!role) return rows;
+  var hi = -1;
+  for (var r = 0; r < Math.min(rows.length, 6); r++) {
+    if (rows[r].some(function (c) { return norm_(c) === '課程名稱'; })) { hi = r; break; }
+  }
+  if (hi < 0) return rows;
+  var col = rows[hi].map(norm_).indexOf(norm_(role));
+  if (col < 0) return rows;
+  return rows.filter(function (row, i) { return i <= hi || isChecked_(row[col]); });
 }
 
 // ===== 權限讀取 =====

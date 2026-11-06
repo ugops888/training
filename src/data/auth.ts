@@ -1,4 +1,4 @@
-import { callApi, setToken, ApiError } from './api';
+import { callApi, setToken, setRole, ApiError } from './api';
 import { USE_DEMO_DATA } from './config';
 import { getDemoSheet } from './demoData';
 import type { PageId } from '../types';
@@ -27,6 +27,7 @@ export function loadSession(): string {
 export function clearSession() {
   try { sessionStorage.removeItem(KEY); } catch { /* ignore */ }
   setToken('');
+  setRole('');
 }
 
 // ---- 預覽模式：在瀏覽器內以虛擬資料驗證（僅供預覽畫面用，不連後端）----
@@ -51,7 +52,10 @@ export async function login(password: string): Promise<Account | null> {
   if (USE_DEMO_DATA) {
     await new Promise((r) => setTimeout(r, 300));
     const acc = demoLogin(pw);
-    if (acc) saveSession(DEMO_PREFIX + pw);
+    if (acc) {
+      saveSession(DEMO_PREFIX + pw);
+      setRole(acc.role);
+    }
     return acc;
   }
   try {
@@ -69,7 +73,11 @@ export async function login(password: string): Promise<Account | null> {
 export async function restoreSession(): Promise<Account | null> {
   const saved = loadSession();
   if (!saved) return null;
-  if (USE_DEMO_DATA) return saved.startsWith(DEMO_PREFIX) ? demoLogin(saved.slice(DEMO_PREFIX.length)) : null;
+  if (USE_DEMO_DATA) {
+    const acc = saved.startsWith(DEMO_PREFIX) ? demoLogin(saved.slice(DEMO_PREFIX.length)) : null;
+    if (acc) setRole(acc.role);
+    return acc;
+  }
   setToken(saved);
   const res = await callApi<{ role: string; pages: PageId[] }>({ action: 'me', token: saved });
   return { role: res.role, pages: res.pages };

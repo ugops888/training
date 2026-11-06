@@ -1,6 +1,7 @@
 import { USE_DEMO_DATA } from './config';
 import { getDemoSheet } from './demoData';
-import { callApi, getToken } from './api';
+import { callApi, getToken, getRole } from './api';
+import { filterCourseRows } from './courseAccess';
 
 export interface SheetStudent {
   id: string;
@@ -142,7 +143,8 @@ export async function fetchSheet(gid: string): Promise<string[][]> {
   // 預覽模式：回傳內建虛擬資料（切換請改 src/data/config.ts）
   if (USE_DEMO_DATA) {
     await new Promise((r) => setTimeout(r, 250)); // 模擬載入時間
-    return getDemoSheet(gid);
+    const demo = getDemoSheet(gid);
+    return gid === '2124489402' ? filterCourseRows(demo, getRole()) : demo;
   }
   const cached = sheetCache.get(gid);
   if (cached && Date.now() - cached.ts < SHEET_TTL_MS) {

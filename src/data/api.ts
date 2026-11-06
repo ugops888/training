@@ -10,10 +10,17 @@ export class ApiError extends Error {
 }
 
 let token = '';
+let role = '';
 let onUnauthorized: (() => void) | null = null;
 
 export function setToken(t: string) {
   token = t;
+}
+export function setRole(r: string) {
+  role = r;
+}
+export function getRole() {
+  return role;
 }
 export function getToken() {
   return token;
