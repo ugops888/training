@@ -3,4 +3,4 @@
 export const USE_DEMO_DATA = false;
 
 // 部署 Apps Script 網頁應用程式後取得的網址（以 /exec 結尾）。USE_DEMO_DATA 為 false 時必填。
-export const APPS_SCRIPT_URL = '';
+export const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzOi1PciqTb59ndcHa870KuNPJSgTxr9Z8eH9rgR3LXjdPF_0zGUuTRxcAkP4WuCMceIw/exec';
