@@ -1,5 +1,6 @@
 import { USE_DEMO_DATA } from './config';
 import { getDemoSheet } from './demoData';
+import { callApi, getToken } from './api';
 
 export interface SheetStudent {
   id: string;
@@ -77,9 +78,6 @@ export interface SheetData {
   positions: { position: string; count: number; avgScore: number }[];
 }
 
-const PUB_BASE =
-  'https://docs.google.com/spreadsheets/d/e/2PACX-1vRtOciQFsSQ9UFWqVZg6X7EMuy275PeNVkMHtmmVyq7_fO96kca62a5HVY2MfLWk4FRW3f8UW9qC02H/pub?output=csv&gid=';
-
 const GID = {
   employee: '873785037',
   examAll: '1715386265', // 考試全紀錄
@@ -137,7 +135,7 @@ export function parseCSV(text: string): string[][] {
 }
 
 // --- 基礎 HTTP 快取：以 gid 為 key 快取 CSV 原始回應 ---
-const sheetCache = new Map<string, { text: string; ts: number }>();
+const sheetCache = new Map<string, { rows: string[][]; ts: number }>();
 const SHEET_TTL_MS = 60_000; // 60 秒內重複請求同一分頁直接用快取
 
 export async function fetchSheet(gid: string): Promise<string[][]> {
@@ -148,13 +146,12 @@ export async function fetchSheet(gid: string): Promise<string[][]> {
   }
   const cached = sheetCache.get(gid);
   if (cached && Date.now() - cached.ts < SHEET_TTL_MS) {
-    return parseCSV(cached.text);
+    return cached.rows.map((r) => r.slice());
   }
-  const res = await fetch(`${PUB_BASE}${gid}`);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const text = await res.text();
-  sheetCache.set(gid, { text, ts: Date.now() });
-  return parseCSV(text);
+  // 由 Apps Script 後端驗證登入憑證與頁面權限後才回傳資料
+  const res = await callApi<{ rows: string[][] }>({ action: 'sheet', token: getToken(), gid });
+  sheetCache.set(gid, { rows: res.rows, ts: Date.now() });
+  return res.rows.map((r) => r.slice());
 }
 
 // 強制清除 HTTP 快取（供「更新數據」按鈕使用）

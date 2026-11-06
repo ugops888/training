@@ -1,22 +1,22 @@
 # 企業教育訓練平台
 
 直營與加盟訓練儀表板、學員歷史查詢、線上訓練平台。
-使用 React + Vite + Tailwind CSS，資料即時讀取自 Google 試算表（已發佈為 CSV）。
+使用 React + Vite + Tailwind CSS，資料由 Google Apps Script 後端驗證登入後，從 Google 試算表讀取。
 
 ## 虛擬資料預覽模式
 
-目前預設使用內建虛擬資料（`src/data/demoData.ts`），不會連線 Google 試算表，方便調整畫面。
+目前預設使用內建虛擬資料（`src/data/demoData.ts`），不會連線後端，方便調整畫面。
 切換方式：修改 `src/data/config.ts`
 
 ```ts
-export const USE_DEMO_DATA = true;   // true：虛擬資料　false：讀取真實 Google 試算表
+export const USE_DEMO_DATA = true;   // true：虛擬資料　false：登入後從 Apps Script 後端讀取真實資料
 ```
 
-正式發布前請改成 `false`。虛擬資料的姓名、成績都是隨機產生的範例。
+正式發布前請改成 `false`，並在同一個檔案填入 `APPS_SCRIPT_URL`。虛擬資料的姓名、成績都是隨機產生的範例。
 
 ## 登入與密碼管理
 
-開啟網址會先看到登入頁，輸入密碼後才會出現側邊選單。密碼與可看頁面由 Google 試算表的「教育訓練管理權限」分頁管理（`src/data/auth.ts` 的 `ACCOUNT_GID`）：
+開啟網址會先看到登入頁，輸入密碼後才會出現側邊選單。密碼與可看頁面由 Google 試算表的「教育訓練管理權限」分頁管理：
 
 | 使用者 | 密碼 | 線上訓練平台 | 直營訓練儀表板 | 加盟訓練儀表板 | 學員歷史查詢 |
 |---|---|---|---|---|---|
@@ -24,10 +24,8 @@ export const USE_DEMO_DATA = true;   // true：虛擬資料　false：讀取真�
 
 - 新增或修改一列即可新增帳號或調整密碼，核取方塊打勾的頁面才會出現在該使用者的選單。
 - 欄位名稱需與上表一致；密碼相同時以最上面一列為準。
-- 重新整理頁面後，系統會用試算表最新內容重新驗證；關閉瀏覽器分頁後需重新登入。
-- 預覽模式（`USE_DEMO_DATA = true`）測試密碼：admin、super、store、learn。
-
-> 注意：這是前端驗證。試算表為「發佈到網路」，密碼欄位技術上任何知道連結的人都讀得到，適合擋一般瀏覽，不適合保護高機密資料。
+- 驗證與資料讀取都由 Google Apps Script 後端處理，**試算表不需要、也不應該「發佈到網路」**。安裝步驟見 `apps-script/安裝說明.md`。
+- 預覽模式（`USE_DEMO_DATA = true`）不連後端，測試密碼：admin、super、store、learn。
 
 ## 控制課程是否顯示（是否開課）
 
@@ -82,6 +80,4 @@ npm run build    # 產生 dist 資料夾
 
 ## 資料來源
 
-資料來自 `src/data/sheetData.ts` 中的 Google 試算表發佈連結（`PUB_BASE` 與各分頁 `GID`）。
-更換試算表時，請在 Google 試算表「檔案 → 分享 → 發佈到網路」發佈為 CSV，再修改這兩處。
-發佈後的試算表任何人都能用連結讀取，請勿放入不能公開的個資。
+正式模式下，資料由 Apps Script 後端（`apps-script/Code.gs`）依登入身分從 Google 試算表讀取。各分頁的 gid 與可讀取的頁面權限，設定在 `Code.gs` 的 `SHEET_ACCESS`；網站端用到的 gid 在 `src/data/sheetData.ts` 與 `src/data/directData.ts`。

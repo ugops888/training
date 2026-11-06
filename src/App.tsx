@@ -1,15 +1,16 @@
 import { useState, useCallback, useEffect } from 'react';
 import { RefreshCw, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import LoginPage from './components/LoginPage';
-import { login, saveSession, loadSession, clearSession, type Account } from './data/auth';
+import { login, restoreSession, loadSession, clearSession, type Account } from './data/auth';
+import { setUnauthorizedHandler } from './data/api';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import DirectDashboardPage from './components/DirectDashboardPage';
 import StudentHistoryPage from './components/StudentHistoryPage';
 import FranchiseDashboardPage, { FranchiseLoading, FranchiseError } from './components/FranchiseDashboardPage';
 import TrainingPlatformPage from './components/TrainingPlatformPage';
-import { fetchFranchiseData, type FranchiseData } from './data/sheetData';
-import { useCachedData, invalidateAll } from './data/swrCache';
+import { fetchFranchiseData, clearSheetCache, type FranchiseData } from './data/sheetData';
+import { useCachedData, invalidateAll, clearStore } from './data/swrCache';
 import type { PageId } from './types';
 
 const COPYRIGHT_NOTICE = '《聯發國際餐飲事業股份有限公司著作權所有，侵害必究，機密資料禁止外流》';
@@ -40,11 +41,10 @@ export default function App() {
   const [account, setAccount] = useState<Account | null>(null);
   const [checking, setChecking] = useState(() => !!loadSession());
 
-  // 同一個瀏覽分頁內重新整理時，用已記住的密碼重新驗證（權限以試算表最新內容為準）
+  // 同一個瀏覽分頁內重新整理時，用已記住的憑證還原登入（權限以試算表最新內容為準）
   useEffect(() => {
-    const saved = loadSession();
-    if (!saved) return;
-    login(saved)
+    if (!loadSession()) return;
+    restoreSession()
       .then((acc) => {
         if (acc) setAccount(acc);
         else clearSession();
@@ -53,23 +53,32 @@ export default function App() {
       .finally(() => setChecking(false));
   }, []);
 
+  // 憑證過期或密碼被更換時，自動回到登入頁
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      clearSession();
+      clearSheetCache();
+      clearStore();
+      setAccount(null);
+    });
+    return () => setUnauthorizedHandler(null);
+  }, []);
+
   const handleLogin = useCallback(async (pw: string): Promise<string | null> => {
     try {
       const acc = await login(pw);
       if (!acc) return '密碼錯誤，請再試一次';
-      saveSession(pw.trim());
       setAccount(acc);
       return null;
     } catch (e) {
-      const m = e instanceof Error ? e.message : String(e);
-      if (/^HTTP \d+/.test(m)) return `讀取「教育訓練管理權限」分頁失敗（${m}）：該分頁可能尚未「發佈到網路」`;
-      if (/Failed to fetch|NetworkError|Load failed/i.test(m)) return '無法連線到 Google 試算表，請檢查網路，或確認該分頁已「發佈到網路」';
-      return `無法驗證密碼：${m}`;
+      return e instanceof Error ? e.message : '無法登入，請稍後再試';
     }
   }, []);
 
   const handleLogout = useCallback(() => {
     clearSession();
+    clearSheetCache();
+    clearStore();
     setAccount(null);
   }, []);
 
@@ -84,6 +93,13 @@ export default function App() {
   return <Main account={account} onLogout={handleLogout} />;
 }
 
+function FranchiseGate() {
+  const { data, loading, error } = useCachedData<FranchiseData>('franchise-data', fetchFranchiseData);
+  if (loading && !data) return <FranchiseLoading />;
+  if (error && !data) return <FranchiseError message={error} />;
+  return data ? <FranchiseDashboardPage data={data} /> : null;
+}
+
 function Main({ account, onLogout }: { account: Account; onLogout: () => void }) {
   const allPages: PageId[] = ['training', 'direct', 'franchise', 'student'];
   const allowed = allPages.filter((p) => account.pages.includes(p));
@@ -91,12 +107,6 @@ function Main({ account, onLogout }: { account: Account; onLogout: () => void })
   const page: PageId = allowed.includes(pageState) ? pageState : allowed[0] ?? 'training';
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [toast, setToast] = useState<ToastState>({ visible: false });
-
-  const {
-    data: franchise,
-    loading: franchiseLoading,
-    error: franchiseError,
-  } = useCachedData<FranchiseData>('franchise-data', fetchFranchiseData);
 
   const handleRefresh = useCallback(() => {
     setToast({ visible: true, type: 'loading', message: '正在重新抓取所有分頁最新資料...' });
@@ -144,15 +154,7 @@ function Main({ account, onLogout }: { account: Account; onLogout: () => void })
             {allowed.includes('direct') && page === 'direct' && (
               <DirectDashboardPage />
             )}
-            {allowed.includes('franchise') && page === 'franchise' && (
-              franchiseLoading && !franchise ? (
-                <FranchiseLoading />
-              ) : franchiseError && !franchise ? (
-                <FranchiseError message={franchiseError} />
-              ) : franchise ? (
-                <FranchiseDashboardPage data={franchise} />
-              ) : null
-            )}
+            {allowed.includes('franchise') && page === 'franchise' && <FranchiseGate />}
             {allowed.includes('training') && page === 'training' && <TrainingPlatformPage />}
             {allowed.includes('student') && page === 'student' && <StudentHistoryPage />}
           </div>

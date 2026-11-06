@@ -63,6 +63,11 @@ function doFetch<T>(key: string, fetcher: () => Promise<T>): Promise<T> {
   return promise;
 }
 
+// 登出時清掉所有已載入的資料，避免下一位登入者在同一個瀏覽器分頁看到前一位的內容
+export function clearStore(): void {
+  store.clear();
+}
+
 export function invalidateAll(): Promise<boolean> {
   const keys = Array.from(store.keys());
   if (keys.length === 0) return Promise.resolve(true);
