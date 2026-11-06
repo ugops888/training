@@ -125,16 +125,19 @@ function filterCourses_(rows, role) {
 // ===== 網站圖片（登入前就要顯示，所以不需要 token；圖片來源只取自「網站設定」分頁） =====
 // 分頁格式：A 欄放名稱（首頁畫面底圖 / logo），B 欄放 Google 雲端硬碟圖片連結。
 function siteFiles_() {
-  var out = { login: null, logo: null };
+  var out = { login: null, loginRight: null, logo: null };
   var sh = findSheet_(SITE_GID);
   if (!sh) return out;
   var values = sh.getDataRange().getDisplayValues();
   for (var i = 0; i < values.length; i++) {
     var label = norm_(values[i][0]).toLowerCase();
     var id = driveId_(values[i][1]);
-    if (!id) continue;
-    if (label === '首頁畫面底圖' || label === '登入畫面底圖' || label === '登入圖片') out.login = id;
-    else if (label === 'logo' || label === '品牌logo') out.logo = id;
+    if (!id || !label) continue;
+    if (label.indexOf('logo') >= 0) out.logo = id;
+    else if (label.indexOf('底圖') >= 0 || label.indexOf('登入') >= 0) {
+      if (label.indexOf('右') >= 0) out.loginRight = id; // 名稱含「右」：登入畫面右側
+      else out.login = id;                              // 其他（含「左」）：登入畫面左側
+    }
   }
   return out;
 }
@@ -147,8 +150,8 @@ function driveId_(url) {
 // 回傳每張圖的「版本代碼」（檔案 ID + 最後修改時間），網站用它判斷有沒有換圖，沒換就不重新下載
 function siteConfig_() {
   var files = siteFiles_();
-  var res = { ok: true, login: null, logo: null };
-  ['login', 'logo'].forEach(function (k) {
+  var res = { ok: true, login: null, loginRight: null, logo: null };
+  ['login', 'loginRight', 'logo'].forEach(function (k) {
     if (!files[k]) return;
     try {
       res[k] = files[k] + ':' + DriveApp.getFileById(files[k]).getLastUpdated().getTime();
@@ -158,7 +161,7 @@ function siteConfig_() {
 }
 
 function siteImage_(which) {
-  if (which !== 'login' && which !== 'logo') return { ok: false, error: '不支援的圖片' };
+  if (which !== 'login' && which !== 'loginRight' && which !== 'logo') return { ok: false, error: '不支援的圖片' };
   var id = siteFiles_()[which];
   if (!id) return { ok: false, error: '尚未設定' };
   var file = DriveApp.getFileById(id);

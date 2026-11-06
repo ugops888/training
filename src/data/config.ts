@@ -9,3 +9,7 @@ export const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzOi1Pci
 // 找不到檔案時，會自動改用預設圖示與插圖。想用別的檔名或格式（例如 logo.svg、login-image.png）就改這裡。
 export const LOGO_FILE = 'logo.png';
 export const LOGIN_IMAGE_FILE = 'login-image.jpg';
+export const LOGIN_IMAGE_RIGHT_FILE = 'login-image-right.jpg'; // 登入畫面右側底圖（放 UG 標誌，表單顯示在標誌下方）
+
+// 左側選單與登入右側的底色，請與 LOGO、右側底圖的綠色一致。
+export const BRAND_GREEN = '#008000';

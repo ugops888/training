@@ -96,8 +96,10 @@ const POSTER_TEA = svgPoster('茶湯萃取溫度對照', ['綠茶：75–80°C�
 const PDF_POS = demoPdf('POS Operation Handout (Demo)', ['1. Open the shift and count the cash drawer.', '2. Enter the order and confirm the items.', '3. Choose the payment method and print the receipt.', '4. Close the shift and check the daily report.']);
 const PDF_DRINK = demoPdf('Signature Drink Checklist (Demo)', ['1. Check the tea base temperature.', '2. Measure toppings with the standard scoop.', '3. Seal the cup and confirm the label.']);
 // 示範：這兩門課「是否開課」未勾選，不會顯示在網頁上
+const DEMO_SIGN_COURSES = new Set(['食品安全', '4.POS 收銀操作', '2.飲品製作基礎']);
+const DEMO_EXAM_COURSES = new Set(['食品安全', '2.飲品製作基礎']);
 const CLOSED_DEMO = new Set(['7.備料區標準作業', '10.店長領導力']);
-const COURSE_HEADER = ['是否開課', '課程名稱', '課程類別', '訓練時數', '及格門檻', '是否必修', '晉升條件', '教材網址', '課程說明', '管理員', '督導', '店長', '學員'];
+const COURSE_HEADER = ['是否開課', '課程名稱', '課程類別', '訓練時數', '及格門檻', '是否必修', '晉升條件', '教材網址', '課程說明', '簽到', '考試', '管理員', '督導', '店長', '學員'];
 const COURSE_DEFS: { name: string; cat: string; hours: number; pass: string; req: string; prom: string; video: string; desc: string }[] = [
   { name: '1.新人入門與品牌認識', cat: '基礎課程', hours: 2, pass: '', req: '必修', prom: '基礎', video: `${VIDEO} ${POSTER_BRAND}`, desc: '認識品牌理念、門市動線與基本禮儀，是所有新夥伴的第一堂課。' },
   { name: '2.飲品製作基礎', cat: '基礎課程', hours: 4, pass: '', req: '必修', prom: '基礎', video: VIDEO, desc: '標準配方、量具使用與出杯流程。' },
@@ -277,7 +279,7 @@ const SHEETS: Record<string, Rows> = {
   '2124489402': [
     COURSE_HEADER,
     // 最後四欄：各身分是否看得到該課程（領航類課程學員看不到）
-    ...COURSE_DEFS.map((d) => [CLOSED_DEMO.has(d.name) ? 'FALSE' : 'TRUE', d.name, d.cat, String(d.hours), d.pass, d.req, d.prom, d.video, d.desc, 'TRUE', 'TRUE', 'TRUE', d.cat.startsWith('領航') ? 'FALSE' : 'TRUE']),
+    ...COURSE_DEFS.map((d) => [CLOSED_DEMO.has(d.name) ? 'FALSE' : 'TRUE', d.name, d.cat, String(d.hours), d.pass, d.req, d.prom, d.video, d.desc, DEMO_SIGN_COURSES.has(d.name) ? 'https://docs.google.com/forms/d/e/1FAIpQLSdemoSignSign/viewform' : '', DEMO_EXAM_COURSES.has(d.name) ? 'https://docs.google.com/forms/d/e/1FAIpQLSdemoExamExam/viewform' : '', 'TRUE', 'TRUE', 'TRUE', d.cat.startsWith('領航') ? 'FALSE' : 'TRUE']),
   ],
   '1513816467': periodMapRows,
   '1745615764': franchiseExamRows,

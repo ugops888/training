@@ -20,6 +20,8 @@ export interface CourseExamDef {
   promotion: string; // 晉升條件
   stage: string; // 階段（基礎/匠心/領航 等，從類別或晉升欄推導）
   videoUrl: string; // 影片網址（YouTube 或其他影片連結）
+  signInFormUrl: string; // 簽到：Google 表單網址（選填）
+  examFormUrl: string; // 考試：Google 表單網址（選填）
   description: string; // 課程說明
 }
 
@@ -81,8 +83,9 @@ async function fetchCourseDefs(): Promise<CourseExamDef[]> {
   const defs: CourseExamDef[] = [];
   // 嘗試偵測欄位位置（由於欄位名稱可能多變，採彈性比對）
   const header = rows[0] ?? [];
-  const colIdx = (names: string[]): number => {
+  const colIdx = (names: string[], skip: number[] = []): number => {
     for (let i = 0; i < header.length; i++) {
+      if (skip.includes(i)) continue;
       const h = (header[i] || '').trim();
       if (names.some((n) => h.includes(n))) return i;
     }
@@ -94,7 +97,13 @@ async function fetchCourseDefs(): Promise<CourseExamDef[]> {
   const passCol = colIdx(['及格門檻', '及格分數', '門檻']);
   const reqCol = colIdx(['必修', '是否必修']);
   const promCol = colIdx(['晉升條件', '晉升']);
-  const videoCol = colIdx(['教材網址', '教材連結', '教材', '影片網址', '影片連結', 'videoUrl', '影片', 'YouTube', '網址']);
+  // 「簽到」「考試」欄位：各放一份 Google 表單網址（欄位名稱必須完全相同，避免和「考試名稱」等欄位混淆）
+  const exactIdx = (names: string[]): number =>
+    header.findIndex((h) => names.includes((h || '').replace(/[\s\u3000]/g, '')));
+  const signCol = exactIdx(['簽到', '簽到表單', '簽到網址', '簽到表單網址']);
+  const examCol = exactIdx(['考試', '考試表單', '考試網址', '考試表單網址']);
+  const formCols = [signCol, examCol].filter((i) => i >= 0);
+  const videoCol = colIdx(['教材網址', '教材連結', '教材', '影片網址', '影片連結', 'videoUrl', '影片', 'YouTube', '網址'], formCols);
   const descCol = colIdx(['課程說明', '說明', '課程介紹', '介紹', '內容說明']);
   // 「是否開課」欄位（核取方塊）：打勾（TRUE）的課程才顯示；試算表沒有這一欄時，全部課程都顯示
   const openCol = colIdx(['是否開課', '開課']);
@@ -120,6 +129,8 @@ async function fetchCourseDefs(): Promise<CourseExamDef[]> {
     const required = (r[reqCol] ?? '').trim();
     const promotion = (r[promCol] ?? '').trim();
     const videoUrl = videoCol >= 0 ? (r[videoCol] ?? '').trim() : '';
+    const signInFormUrl = signCol >= 0 ? (r[signCol] ?? '').trim() : '';
+    const examFormUrl = examCol >= 0 ? (r[examCol] ?? '').trim() : '';
     const description = descCol >= 0 ? (r[descCol] ?? '').trim() : '';
 
     // 推導階段
@@ -140,6 +151,8 @@ async function fetchCourseDefs(): Promise<CourseExamDef[]> {
       promotion,
       stage,
       videoUrl,
+      signInFormUrl,
+      examFormUrl,
       description,
     });
   }

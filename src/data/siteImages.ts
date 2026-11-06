@@ -5,13 +5,14 @@ import { APPS_SCRIPT_URL, USE_DEMO_DATA } from './config';
 // LOGO 與登入底圖：由試算表「網站設定」分頁指定 Google 雲端硬碟圖片，經 Apps Script 後端取得。
 // 流程：先用上次存在瀏覽器的圖（立刻顯示）→ 向後端確認有沒有換圖 → 有換才重新下載。
 // 沒設定或失敗時，網站自動改用 public 資料夾的檔案，再不行就用預設圖示。
-type Which = 'logo' | 'login';
+type Which = 'logo' | 'login' | 'loginRight';
 interface Snapshot {
   logo: string | null;
   login: string | null;
+  loginRight: string | null;
 }
 
-let snapshot: Snapshot = { logo: null, login: null };
+let snapshot: Snapshot = { logo: null, login: null, loginRight: null };
 const listeners = new Set<() => void>();
 let started = false;
 
@@ -41,13 +42,13 @@ function writeCache(which: Which, v: { key: string; data: string } | null) {
 }
 
 async function syncFromBackend() {
-  let cfg: { logo: string | null; login: string | null };
+  let cfg: Record<Which, string | null>;
   try {
-    cfg = await callApi<{ logo: string | null; login: string | null }>({ action: 'siteConfig' });
+    cfg = await callApi<Record<Which, string | null>>({ action: 'siteConfig' });
   } catch {
     return; // 後端暫時連不上：維持目前畫面
   }
-  for (const which of ['logo', 'login'] as Which[]) {
+  for (const which of ['logo', 'login', 'loginRight'] as Which[]) {
     const key = cfg[which];
     if (!key) {
       writeCache(which, null);
@@ -77,13 +78,16 @@ export function initSiteImages() {
     import('./demoImages').then((m) => {
       set('logo', m.DEMO_LOGO || null);
       set('login', m.DEMO_LOGIN || null);
+      set('loginRight', m.DEMO_LOGIN_RIGHT || null);
     });
     return;
   }
   const l = readCache('logo');
   const g = readCache('login');
+  const rr = readCache('loginRight');
   if (l) set('logo', l.data);
   if (g) set('login', g.data);
+  if (rr) set('loginRight', rr.data);
   if (APPS_SCRIPT_URL) void syncFromBackend();
 }
 

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { GraduationCap, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
-import { USE_DEMO_DATA, LOGIN_IMAGE_FILE } from '../data/config';
+import { USE_DEMO_DATA, LOGIN_IMAGE_FILE, LOGIN_IMAGE_RIGHT_FILE, BRAND_GREEN } from '../data/config';
 import { assetUrl } from '../assets';
 import { useSiteImages } from '../data/siteImages';
 
@@ -58,6 +58,9 @@ export default function LoginPage({ onSubmit }: LoginPageProps) {
   const imgSrc = site.login ?? assetUrl(LOGIN_IMAGE_FILE);
   const [failedImg, setFailedImg] = useState('');
   const imgFailed = failedImg === imgSrc;
+  const rightSrc = site.loginRight ?? assetUrl(LOGIN_IMAGE_RIGHT_FILE);
+  const [failedRight, setFailedRight] = useState('');
+  const green = failedRight !== rightSrc; // 有右側底圖：綠底版面，表單放在 UG 標誌下方
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -96,16 +99,29 @@ export default function LoginPage({ onSubmit }: LoginPageProps) {
         </section>
       )}
 
-      <section className="flex-1 flex flex-col items-center justify-center px-6 py-10">
-        <form onSubmit={submit} className="w-full max-w-sm">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-11 h-11 rounded-xl bg-mint-400 text-forest-900 flex items-center justify-center shadow-md">
-              <GraduationCap className="w-6 h-6" strokeWidth={2.2} />
-            </div>
-            <h1 className="text-2xl font-bold text-forest-900">企業教育訓練平台</h1>
+      <section
+        className="relative flex-1 flex flex-col items-center px-6 pb-10 min-h-screen lg:min-h-0"
+        style={green ? { backgroundColor: BRAND_GREEN, paddingTop: '44vh' } : { paddingTop: '2.5rem', justifyContent: 'center' }}
+      >
+        {green && (
+          <img
+            src={rightSrc}
+            alt=""
+            className="absolute inset-0 w-full h-full object-contain object-top pointer-events-none select-none"
+            onError={() => setFailedRight(rightSrc)}
+          />
+        )}
+        <form onSubmit={submit} className="relative w-full max-w-sm">
+          <div className="flex items-center justify-center gap-3 mb-6">
+            {!green && (
+              <div className="w-11 h-11 rounded-xl bg-mint-400 text-forest-900 flex items-center justify-center shadow-md">
+                <GraduationCap className="w-6 h-6" strokeWidth={2.2} />
+              </div>
+            )}
+            <h1 className={`text-2xl font-bold ${green ? 'text-white' : 'text-forest-900'}`}>企業教育訓練平台</h1>
           </div>
 
-          <label htmlFor="pw" className="block text-sm font-semibold text-forest-800 mb-2">
+          <label htmlFor="pw" className={`block text-sm font-semibold mb-2 ${green ? 'text-white' : 'text-forest-800'}`}>
             請輸入密碼
           </label>
           <div className="relative">
@@ -120,9 +136,9 @@ export default function LoginPage({ onSubmit }: LoginPageProps) {
               }}
               autoFocus
               autoComplete="current-password"
-              className={`w-full pl-10 pr-11 py-3 rounded-xl bg-white border text-forest-900 outline-none focus:ring-2 focus:ring-mint-400 ${
-                err ? 'border-red-300' : 'border-forest-100'
-              }`}
+              className={`w-full pl-10 pr-11 py-3 rounded-xl bg-white border text-forest-900 outline-none focus:ring-2 ${
+                green ? 'focus:ring-white/70' : 'focus:ring-mint-400'
+              } ${err ? 'border-red-300' : 'border-forest-100'}`}
             />
             <button
               type="button"
@@ -133,24 +149,37 @@ export default function LoginPage({ onSubmit }: LoginPageProps) {
               {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
-          {err && <p className="mt-2 text-sm text-red-600" role="alert">{err}</p>}
+          {err && (
+            <p
+              className={`mt-2 text-sm ${green ? 'text-white bg-red-700/70 rounded-lg px-3 py-1.5' : 'text-red-600'}`}
+              role="alert"
+            >
+              {err}
+            </p>
+          )}
 
           <button
             type="submit"
             disabled={busy}
-            className="mt-5 w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl bg-mint-500 text-white font-semibold shadow-card hover:bg-mint-600 disabled:opacity-70 transition-colors"
+            className={`mt-5 w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl font-semibold shadow-card disabled:opacity-70 transition-colors ${
+              green ? 'bg-white text-forest-800 hover:bg-white/90' : 'bg-mint-500 text-white hover:bg-mint-600'
+            }`}
           >
             {busy && <Loader2 className="w-4 h-4 animate-spin" />}
             {busy ? '驗證中…' : '登入'}
           </button>
 
           {USE_DEMO_DATA && (
-            <p className="mt-6 text-xs text-forest-500 leading-relaxed bg-forest-50 rounded-lg px-3 py-2">
+            <p
+              className={`mt-6 text-xs leading-relaxed rounded-lg px-3 py-2 ${
+                green ? 'text-white/90 bg-black/15' : 'text-forest-500 bg-forest-50'
+              }`}
+            >
               預覽模式測試密碼：admin（管理員）、super（督導）、store（店長）、learn（學員）
             </p>
           )}
         </form>
-        <p className="mt-10 text-xs text-forest-400 text-center max-w-sm">
+        <p className={`relative mt-8 text-xs text-center max-w-sm ${green ? 'text-white/80' : 'text-forest-400'}`}>
           《聯發國際餐飲事業股份有限公司著作權所有，侵害必究，機密資料禁止外流》
         </p>
       </section>

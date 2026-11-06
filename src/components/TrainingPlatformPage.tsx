@@ -14,6 +14,7 @@ import {
 import { fetchTrainingCourses, type CourseExamDef } from '../data/directData';
 import { useCachedData } from '../data/swrCache';
 import MaterialViewer from './training/MaterialViewer';
+import FormPanel from './training/FormPanel';
 import { parseMaterials, KIND_LABEL } from './training/materials';
 
 interface CategoryGroup {
@@ -206,6 +207,8 @@ function CourseListPanel({
                     const mats = parseMaterials(c.videoUrl);
                     const hasVideo = mats.length > 0;
                     const kinds = Array.from(new Set(mats.map((m) => (m.kind === 'gdrive' ? '雲端' : KIND_LABEL[m.kind]))));
+                    if (c.signInFormUrl) kinds.push('簽到');
+                    if (c.examFormUrl) kinds.push('考試');
                     return (
                       <li key={key}>
                         <button
@@ -278,6 +281,10 @@ function VideoPlayerPanel({ course }: { course: CourseExamDef | null }) {
     <div className="space-y-4">
       {/* 教材檢視器：影片 / 圖片 / PDF */}
       <MaterialViewer key={`${course.name}|${course.category}`} title={course.name} raw={course.videoUrl} />
+
+      {/* 簽到、考試（各一份 Google 表單，選填） */}
+      <FormPanel key={`signin-${course.name}|${course.category}`} kind="signin" title={course.name} raw={course.signInFormUrl} />
+      <FormPanel key={`exam-${course.name}|${course.category}`} kind="exam" title={course.name} raw={course.examFormUrl} />
 
       {/* 課程詳細資訊區 */}
       <div className="bg-white rounded-2xl shadow-card border border-forest-50 p-5 md:p-6 space-y-5">

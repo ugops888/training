@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { AlertCircle, PlayCircle, FileText, Image as ImageIcon, Maximize2, Minimize2 } from 'lucide-react';
+import { AlertCircle, Play, PlayCircle, FileText, Image as ImageIcon, Maximize2, Minimize2 } from 'lucide-react';
 import { parseMaterials, EMBED_SANDBOX, type Material } from './materials';
 
 function KindIcon({ kind, className }: { kind: Material['kind']; className?: string }) {
@@ -14,6 +14,8 @@ export default function MaterialViewer({ title, raw }: { title: string; raw: str
   const [idx, setIdx] = useState(0);
   const current: Material | undefined = items[Math.min(idx, items.length - 1)];
   const [large, setLarge] = useState(current?.kind === 'pdf');
+  const [started, setStarted] = useState<string>(''); // 已按下播放的 YouTube 影片（用 src 當識別）
+  const [thumbFailed, setThumbFailed] = useState(false);
 
   const select = (i: number) => {
     setIdx(i);
@@ -25,11 +27,39 @@ export default function MaterialViewer({ title, raw }: { title: string; raw: str
   return (
     <div className="bg-white rounded-2xl shadow-card border border-forest-50 overflow-hidden">
       <div className="relative bg-forest-900" style={boxStyle}>
-        {current && (current.kind === 'youtube' || current.kind === 'gdrive') && (
+        {current?.kind === 'youtube' && started !== current.src && (
+          // 自訂封面：先不載入 YouTube 播放器，避免出現「稍後觀看」「分享」按鈕；按下播放才載入並自動播放
+          <button
+            type="button"
+            onClick={() => {
+              setThumbFailed(false);
+              setStarted(current.src);
+            }}
+            className="absolute inset-0 w-full h-full group"
+            aria-label={`播放：${title}`}
+          >
+            {current.ytId && !thumbFailed && (
+              <img
+                src={`https://i.ytimg.com/vi/${current.ytId}/hqdefault.jpg`}
+                alt=""
+                draggable={false}
+                className="absolute inset-0 w-full h-full object-cover"
+                onError={() => setThumbFailed(true)}
+              />
+            )}
+            <span className="absolute inset-0 bg-black/25 group-hover:bg-black/15 transition-colors" />
+            <span className="absolute inset-0 flex items-center justify-center">
+              <span className="w-20 h-20 rounded-full bg-white/95 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+                <Play className="w-9 h-9 text-forest-800 ml-1" fill="currentColor" />
+              </span>
+            </span>
+          </button>
+        )}
+        {current && ((current.kind === 'youtube' && started === current.src) || current.kind === 'gdrive') && (
           <>
             <iframe
               key={current.src}
-              src={current.src}
+              src={current.kind === 'youtube' ? `${current.src}&autoplay=1` : current.src}
               title={title}
               className="absolute inset-0 w-full h-full"
               sandbox={EMBED_SANDBOX}
@@ -37,8 +67,8 @@ export default function MaterialViewer({ title, raw }: { title: string; raw: str
               referrerPolicy="strict-origin-when-cross-origin"
               allowFullScreen
             />
-            {/* 蓋住上方標題列與「在新視窗開啟」按鈕，避免點到外部連結 */}
-            <div className="absolute top-0 left-0 right-0 z-10 h-14" aria-hidden="true" />
+            {/* 蓋住上方標題列與右上角按鈕（稍後觀看、分享、在新視窗開啟），避免點到外部功能 */}
+            <div className="absolute top-0 left-0 right-0 z-10 h-16" aria-hidden="true" />
           </>
         )}
         {current?.kind === 'video' && (

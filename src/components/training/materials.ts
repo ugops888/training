@@ -10,6 +10,8 @@ export interface Material {
   kind: MaterialKind;
   /** 實際嵌入用的網址（YouTube / Google 雲端硬碟會轉成預覽網址） */
   src: string;
+  /** YouTube 影片代碼（用來顯示自訂封面） */
+  ytId?: string;
   /** 顯示在分頁籤上的類型名稱 */
   label: string;
 }
@@ -58,7 +60,7 @@ function extractGDriveFileId(url: string): string | null {
 }
 
 function detect(url: string): Material {
-  const make = (kind: MaterialKind, src = url): Material => ({ url, kind, src, label: KIND_LABEL[kind] });
+  const make = (kind: MaterialKind, src = url, ytId?: string): Material => ({ url, kind, src, ytId, label: KIND_LABEL[kind] });
 
   // data: 網址（內嵌檔案）
   if (/^data:image\//i.test(url)) return make('image');
@@ -66,7 +68,7 @@ function detect(url: string): Material {
   if (/^data:video\//i.test(url)) return make('video');
 
   const ytId = extractYouTubeId(url);
-  if (ytId) return make('youtube', `https://www.youtube.com/embed/${ytId}?rel=0&modestbranding=1&playsinline=1&iv_load_policy=3`);
+  if (ytId) return make('youtube', `https://www.youtube.com/embed/${ytId}?rel=0&modestbranding=1&playsinline=1&iv_load_policy=3&fs=0`, ytId);
 
   if (/drive\.google\.com/i.test(url)) {
     const id = extractGDriveFileId(url);
@@ -93,3 +95,24 @@ export function parseMaterials(raw: string | undefined): Material[] {
 
 /** 嵌入時使用的 sandbox：不給 allow-popups，使影片內的任何連結都無法開新分頁或跳走 */
 export const EMBED_SANDBOX = 'allow-scripts allow-same-origin allow-presentation';
+
+export type FormInfo = { src: string } | { error: string };
+
+/** 解析 Google 表單網址，轉成可嵌入的網址；空白回傳 null */
+export function parseForm(raw: string): FormInfo | null {
+  const url = (raw ?? '').trim().split(/\s+/)[0] ?? '';
+  if (!url) return null;
+  if (/forms\.gle\//i.test(url)) {
+    return { error: '短網址（forms.gle）無法嵌入，請在表單按「傳送」→「連結」，貼上以 docs.google.com/forms 開頭的完整網址' };
+  }
+  if (!/^https:\/\/docs\.google\.com\/forms\//i.test(url)) {
+    return { error: '不是 Google 表單網址（應以 https://docs.google.com/forms/ 開頭）' };
+  }
+  try {
+    const u = new URL(url);
+    u.searchParams.set('embedded', 'true');
+    return { src: u.toString() };
+  } catch {
+    return { error: '表單網址格式不正確' };
+  }
+}
