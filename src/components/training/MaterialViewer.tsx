@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { AlertCircle, Play, PlayCircle, FileText, Image as ImageIcon, Maximize2, Minimize2 } from 'lucide-react';
 import { parseMaterials, EMBED_SANDBOX, type Material } from './materials';
-import { YT_CLIP_PX } from '../../data/config';
 
 function KindIcon({ kind, className }: { kind: Material['kind']; className?: string }) {
   if (kind === 'pdf') return <FileText className={className} />;
@@ -62,17 +61,22 @@ export default function MaterialViewer({ title, raw }: { title: string; raw: str
               key={current.src}
               src={current.kind === 'youtube' ? `${current.src}&autoplay=1` : current.src}
               title={title}
-              className={current.kind === 'youtube' ? 'absolute left-0 w-full' : 'absolute inset-0 w-full h-full'}
-              // YouTube：播放器比顯示區域上下各多出 YT_CLIP_PX，超出的部分被裁掉，
-              // 影片（置中、等比例）剛好留在可見範圍，YouTube 貼在上下邊緣的按鈕就看不到
-              style={current.kind === 'youtube' ? { top: -YT_CLIP_PX, height: `calc(100% + ${YT_CLIP_PX * 2}px)` } : undefined}
+              className="absolute inset-0 w-full h-full"
               sandbox={EMBED_SANDBOX}
               allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
               referrerPolicy="strict-origin-when-cross-origin"
               allowFullScreen
             />
-            {/* 蓋住上方標題列與右上角按鈕（稍後觀看、分享、在新視窗開啟），避免點到外部功能 */}
+            {/* 透明遮罩：蓋住上方標題列與右上角按鈕（在新視窗開啟等），點了沒有反應 */}
             <div className="absolute top-0 left-0 right-0 z-10 h-16" aria-hidden="true" />
+            {/* 透明遮罩：蓋住下緣的「稍後觀看」「分享」「更多影片」；高度隨畫面縮放，留出上方的進度條 */}
+            {current.kind === 'youtube' && (
+              <div
+                className="absolute bottom-0 left-0 right-0 z-10"
+                style={{ height: 'clamp(44px, 14%, 112px)' }}
+                aria-hidden="true"
+              />
+            )}
           </>
         )}
         {current?.kind === 'video' && (

@@ -13,7 +13,3 @@ export const LOGIN_IMAGE_RIGHT_FILE = 'login-image-right.jpg'; // 登入畫面�
 
 // 左側選單與登入右側的底色，請與 LOGO、右側底圖的綠色一致。
 export const BRAND_GREEN = '#008000';
-
-// YouTube 播放器上下各裁掉多少 px：YouTube 在畫面下緣的「稍後觀看」「分享」「更多影片」、上緣的標題列會因此被裁掉看不到。
-// 影片本身不受影響；若實測仍看得到這些按鈕就調大，若進度條被裁掉就調小。
-export const YT_CLIP_PX = 100;

@@ -149,22 +149,8 @@ export default function TrainingPlatformPage() {
         </div>
       </div>
 
-      {selected && (
-        <>
-          {/* 1. 課程說明 */}
-          <CourseInfoCard course={selected} />
-          {/* 2. 簽到與考試 */}
-          <SignExamBar
-            key={`forms-${selected.name}|${selected.category}`}
-            title={selected.name}
-            signInRaw={selected.signInFormUrl}
-            examRaw={selected.examFormUrl}
-          />
-        </>
-      )}
-
-      {/* 3. 課程清單（窄）＋ 課程影片（大）；清單高度與影片區相同 */}
-      <div className="grid grid-cols-1 lg:grid-cols-[113px_1fr] gap-4">
+      {/* 左：課程清單（寬 200px，高度與右側整欄相同、內容在清單內捲動）／右：課程說明 → 簽到與考試 → 課程影片 */}
+      <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-4">
         <div className="relative">
           <CourseListPanel
             groups={filteredGroups}
@@ -174,7 +160,20 @@ export default function TrainingPlatformPage() {
             onToggleCollapse={toggleCollapse}
           />
         </div>
-        <VideoPlayerPanel course={selected} />
+        <div className="space-y-4 min-w-0">
+          {selected && (
+            <>
+              <CourseInfoCard course={selected} />
+              <SignExamBar
+                key={`forms-${selected.name}|${selected.category}`}
+                title={selected.name}
+                signInRaw={selected.signInFormUrl}
+                examRaw={selected.examFormUrl}
+              />
+            </>
+          )}
+          <VideoPlayerPanel course={selected} />
+        </div>
       </div>
     </div>
   );
@@ -214,7 +213,7 @@ function CourseListPanel({
                   <ChevronDown className="w-3.5 h-3.5 text-forest-500 shrink-0" />
                 )}
                 <span className="text-xs font-bold text-forest-700 tracking-wide">{g.category}</span>
-                <span className="text-[10px] text-forest-400 ml-auto lg:hidden">{g.courses.length} 門</span>
+                <span className="text-[10px] text-forest-400 ml-auto">{g.courses.length} 門</span>
               </button>
               {!isCollapsed && (
                 <ul className="divide-y divide-forest-50/60">
@@ -252,7 +251,7 @@ function CourseListPanel({
                               </p>
                               <div className="flex items-center gap-2 mt-1 flex-wrap">
                                 {kinds.map((k) => (
-                                  <span key={k} className="text-[10px] text-mint-500 font-medium lg:hidden">
+                                  <span key={k} className="text-[10px] text-mint-500 font-medium">
                                     {k}
                                   </span>
                                 ))}
