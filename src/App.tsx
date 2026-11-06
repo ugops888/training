@@ -62,7 +62,7 @@ export default function App() {
       return null;
     } catch (e) {
       const m = e instanceof Error ? e.message : String(e);
-      if (/^HTTP \d+/.test(m)) return `讀取「使用者密碼」分頁失敗（${m}）：該分頁可能尚未「發佈到網路」`;
+      if (/^HTTP \d+/.test(m)) return `讀取「教育訓練管理權限」分頁失敗（${m}）：該分頁可能尚未「發佈到網路」`;
       if (/Failed to fetch|NetworkError|Load failed/i.test(m)) return '無法連線到 Google 試算表，請檢查網路，或確認該分頁已「發佈到網路」';
       return `無法驗證密碼：${m}`;
     }

@@ -281,7 +281,7 @@ const SHEETS: Record<string, Rows> = {
   '1513816467': periodMapRows,
   '1745615764': franchiseExamRows,
   '1051538313': enrollRows,
-  '667663661': [
+  '2138174619': [
     ['使用者', '密碼', '線上訓練平台', '直營訓練儀表板', '加盟訓練儀表板', '學員歷史查詢'],
     ['管理員', 'admin', 'TRUE', 'TRUE', 'TRUE', 'TRUE'],
     ['督導', 'super', 'TRUE', 'TRUE', 'FALSE', 'FALSE'],

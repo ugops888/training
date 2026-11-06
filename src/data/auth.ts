@@ -1,8 +1,29 @@
-import { fetchSheet } from './sheetData';
+import { fetchSheet, parseCSV } from './sheetData';
+import { USE_DEMO_DATA } from './config';
 import type { PageId } from '../types';
 
-// 「使用者密碼」分頁（同一份 Google 試算表）
-export const ACCOUNT_GID = '667663661';
+// 「教育訓練管理權限」分頁（同一份 Google 試算表）
+export const ACCOUNT_GID = '2138174619';
+
+// 權限試算表本身的檔案 ID（備援讀取用，需設為「知道連結的人可檢視」）
+const ACCOUNT_DOC_ID = '1H1tFtfK8VIndpMZY0Lsnw4mycrpV91bePj2Anig4thw';
+
+async function fetchAccountRows(): Promise<string[][]> {
+  if (USE_DEMO_DATA) return fetchSheet(ACCOUNT_GID);
+  try {
+    return await fetchSheet(ACCOUNT_GID); // 先走原本已發佈的試算表
+  } catch (first) {
+    // 備援：直接以檔案 ID 讀取該分頁
+    const url = `https://docs.google.com/spreadsheets/d/${ACCOUNT_DOC_ID}/gviz/tq?tqx=out:csv&gid=${ACCOUNT_GID}`;
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return parseCSV(await res.text());
+    } catch {
+      throw first;
+    }
+  }
+}
 
 export interface Account {
   role: string;
@@ -22,7 +43,7 @@ const isChecked = (v: string) => /^(true|是|v|y|yes|1|✓|✔|☑)$/i.test((v ?
 export async function login(password: string): Promise<Account | null> {
   const pw = password.trim();
   if (!pw) return null;
-  const rows = await fetchSheet(ACCOUNT_GID);
+  const rows = await fetchAccountRows();
   // 標題列通常是第一列；若上方有空列或標題，往下找含「密碼」的那一列
   const hi = rows.findIndex((r, i) => i < 6 && r.some((c) => c.trim() === '密碼'));
   if (hi < 0) throw new Error('找不到「密碼」欄位，請確認分頁第一列的欄位名稱');
