@@ -14,7 +14,7 @@ import {
 import { fetchTrainingCourses, type CourseExamDef } from '../data/directData';
 import { useCachedData } from '../data/swrCache';
 import MaterialViewer from './training/MaterialViewer';
-import FormPanel from './training/FormPanel';
+import SignExamBar from './training/FormPanel';
 import { parseMaterials, KIND_LABEL } from './training/materials';
 
 interface CategoryGroup {
@@ -149,14 +149,31 @@ export default function TrainingPlatformPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-4">
-        <CourseListPanel
-          groups={filteredGroups}
-          selected={selected}
-          onSelect={handleSelect}
-          collapsedCats={collapsedCats}
-          onToggleCollapse={toggleCollapse}
-        />
+      {selected && (
+        <>
+          {/* 1. 課程說明 */}
+          <CourseInfoCard course={selected} />
+          {/* 2. 簽到與考試 */}
+          <SignExamBar
+            key={`forms-${selected.name}|${selected.category}`}
+            title={selected.name}
+            signInRaw={selected.signInFormUrl}
+            examRaw={selected.examFormUrl}
+          />
+        </>
+      )}
+
+      {/* 3. 課程清單（窄）＋ 課程影片（大）；清單高度與影片區相同 */}
+      <div className="grid grid-cols-1 lg:grid-cols-[113px_1fr] gap-4">
+        <div className="relative">
+          <CourseListPanel
+            groups={filteredGroups}
+            selected={selected}
+            onSelect={handleSelect}
+            collapsedCats={collapsedCats}
+            onToggleCollapse={toggleCollapse}
+          />
+        </div>
         <VideoPlayerPanel course={selected} />
       </div>
     </div>
@@ -177,9 +194,9 @@ function CourseListPanel({
   onToggleCollapse: (cat: string) => void;
 }) {
   return (
-    <div className="bg-white rounded-2xl shadow-card border border-forest-50 overflow-hidden flex flex-col max-h-[calc(100vh-220px)]">
-      <div className="px-4 py-3 border-b border-forest-50 flex items-center gap-2">
-        <BookOpen className="w-4 h-4 text-mint-600" />
+    <div className="bg-white rounded-2xl shadow-card border border-forest-50 overflow-hidden flex flex-col max-h-[60vh] lg:max-h-none lg:absolute lg:inset-0">
+      <div className="px-4 lg:px-2 py-3 border-b border-forest-50 flex items-center gap-2">
+        <BookOpen className="w-4 h-4 text-mint-600 lg:hidden" />
         <h3 className="text-sm font-semibold text-forest-900">課程清單</h3>
       </div>
       <div className="overflow-y-auto flex-1">
@@ -189,7 +206,7 @@ function CourseListPanel({
             <div key={g.category}>
               <button
                 onClick={() => onToggleCollapse(g.category)}
-                className="w-full flex items-center gap-2 px-4 py-2.5 bg-forest-50/40 hover:bg-forest-50/70 transition-colors text-left"
+                className="w-full flex items-center gap-2 lg:gap-1 px-4 lg:px-2 py-2.5 bg-forest-50/40 hover:bg-forest-50/70 transition-colors text-left"
               >
                 {isCollapsed ? (
                   <ChevronRight className="w-3.5 h-3.5 text-forest-500 shrink-0" />
@@ -197,7 +214,7 @@ function CourseListPanel({
                   <ChevronDown className="w-3.5 h-3.5 text-forest-500 shrink-0" />
                 )}
                 <span className="text-xs font-bold text-forest-700 tracking-wide">{g.category}</span>
-                <span className="text-[10px] text-forest-400 ml-auto">{g.courses.length} 門</span>
+                <span className="text-[10px] text-forest-400 ml-auto lg:hidden">{g.courses.length} 門</span>
               </button>
               {!isCollapsed && (
                 <ul className="divide-y divide-forest-50/60">
@@ -213,7 +230,7 @@ function CourseListPanel({
                       <li key={key}>
                         <button
                           onClick={() => onSelect(c)}
-                          className={`w-full text-left px-4 py-3 transition-all duration-200 ${
+                          className={`w-full text-left px-4 lg:px-2 py-3 lg:py-2.5 transition-all duration-200 ${
                             isActive
                               ? 'bg-mint-50 border-l-[3px] border-mint-500'
                               : 'hover:bg-forest-50/40 border-l-[3px] border-transparent'
@@ -221,13 +238,13 @@ function CourseListPanel({
                         >
                           <div className="flex items-start gap-2.5">
                             <PlayCircle
-                              className={`w-4 h-4 mt-0.5 shrink-0 ${
+                              className={`w-4 h-4 mt-0.5 shrink-0 lg:hidden ${
                                 hasVideo ? 'text-mint-500' : 'text-forest-300'
                               }`}
                             />
                             <div className="min-w-0 flex-1">
                               <p
-                                className={`text-sm font-medium truncate ${
+                                className={`text-sm lg:text-xs font-medium truncate lg:whitespace-normal lg:break-words lg:leading-snug ${
                                   isActive ? 'text-mint-800' : 'text-forest-800'
                                 }`}
                               >
@@ -235,7 +252,7 @@ function CourseListPanel({
                               </p>
                               <div className="flex items-center gap-2 mt-1 flex-wrap">
                                 {kinds.map((k) => (
-                                  <span key={k} className="text-[10px] text-mint-500 font-medium">
+                                  <span key={k} className="text-[10px] text-mint-500 font-medium lg:hidden">
                                     {k}
                                   </span>
                                 ))}
@@ -245,7 +262,7 @@ function CourseListPanel({
                               </div>
                             </div>
                             <ChevronRight
-                              className={`w-4 h-4 mt-1 shrink-0 transition-transform ${
+                              className={`w-4 h-4 mt-1 shrink-0 transition-transform lg:hidden ${
                                 isActive ? 'text-mint-500 translate-x-0' : 'text-forest-300 -translate-x-1'
                               }`}
                             />
@@ -277,69 +294,66 @@ function VideoPlayerPanel({ course }: { course: CourseExamDef | null }) {
     );
   }
 
+  // 教材檢視器：影片 / 圖片 / PDF
+  return <MaterialViewer key={`${course.name}|${course.category}`} title={course.name} raw={course.videoUrl} />;
+}
+
+/** 課程說明卡：標題、類別、時數、及格門檻與課程說明 */
+function CourseInfoCard({ course }: { course: CourseExamDef }) {
   return (
-    <div className="space-y-4">
-      {/* 教材檢視器：影片 / 圖片 / PDF */}
-      <MaterialViewer key={`${course.name}|${course.category}`} title={course.name} raw={course.videoUrl} />
-
-      {/* 簽到、考試（各一份 Google 表單，選填） */}
-      <FormPanel key={`signin-${course.name}|${course.category}`} kind="signin" title={course.name} raw={course.signInFormUrl} />
-      <FormPanel key={`exam-${course.name}|${course.category}`} kind="exam" title={course.name} raw={course.examFormUrl} />
-
-      {/* 課程詳細資訊區 */}
-      <div className="bg-white rounded-2xl shadow-card border border-forest-50 p-5 md:p-6 space-y-5">
-        {/* 第一部分：頂部標題與數據卡片 */}
-        <div>
-          {/* 第一行：課程主標題 */}
-          <div className="flex items-start justify-between gap-3 flex-wrap">
-            <h3 className="text-xl font-bold text-forest-900 leading-snug">{course.name}</h3>
-          </div>
-
-          {/* 第二行：屬性與數據膠囊卡片 */}
-          <div className="flex items-center gap-2.5 mt-3 flex-wrap">
-            {/* 課程類別標籤 */}
-            <span className="inline-flex items-center gap-1.5 text-sm text-forest-600">
-              <Tag className="w-4 h-4 text-mint-500" />
-              <span className="font-medium">{course.category || '未分類'}</span>
-            </span>
-
-            {/* 訓練時數膠囊卡片 */}
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-mint-50 border border-mint-100 text-sm text-mint-700">
-              <Clock className="w-3.5 h-3.5" />
-              <span className="text-forest-500">訓練時數</span>
-              <span className="font-semibold text-mint-800">
-                {course.hours > 0 ? `${course.hours} HR` : '—'}
-              </span>
-            </span>
-
-            {/* 及格門檻膠囊卡片 */}
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-forest-50 border border-forest-100 text-sm text-forest-700">
-              <Award className="w-3.5 h-3.5" />
-              <span className="text-forest-500">及格門檻</span>
-              <span className="font-semibold text-forest-800">{course.passScore} 分</span>
-            </span>
-          </div>
+    <div className="bg-white rounded-2xl shadow-card border border-forest-50 p-5 md:p-6 space-y-5">
+      {/* 第一部分：頂部標題與數據卡片 */}
+      <div>
+        {/* 第一行：課程主標題 */}
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <h3 className="text-xl font-bold text-forest-900 leading-snug">{course.name}</h3>
         </div>
 
-        {/* 第二部分：課程內容說明卡片 */}
-        <div className="rounded-xl border border-forest-100 bg-forest-50/30 p-4 md:p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-7 h-7 rounded-lg bg-mint-50 text-mint-600 flex items-center justify-center shrink-0">
-              <BookOpen className="w-4 h-4" />
-            </div>
-            <h4 className="text-sm font-semibold text-forest-800">課程說明</h4>
-          </div>
-          {course.description ? (
-            <p className="text-sm text-forest-700 leading-relaxed whitespace-pre-line">
-              {course.description}
-            </p>
-          ) : (
-            <p className="text-sm text-forest-400 italic">
-              尚未填寫課程說明。請在課程與考試清單試算表中新增「課程說明」欄位內容。
-            </p>
-          )}
+        {/* 第二行：屬性與數據膠囊卡片 */}
+        <div className="flex items-center gap-2.5 mt-3 flex-wrap">
+          {/* 課程類別標籤 */}
+          <span className="inline-flex items-center gap-1.5 text-sm text-forest-600">
+            <Tag className="w-4 h-4 text-mint-500" />
+            <span className="font-medium">{course.category || '未分類'}</span>
+          </span>
+
+          {/* 訓練時數膠囊卡片 */}
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-mint-50 border border-mint-100 text-sm text-mint-700">
+            <Clock className="w-3.5 h-3.5" />
+            <span className="text-forest-500">訓練時數</span>
+            <span className="font-semibold text-mint-800">
+              {course.hours > 0 ? `${course.hours} HR` : '—'}
+            </span>
+          </span>
+
+          {/* 及格門檻膠囊卡片 */}
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-forest-50 border border-forest-100 text-sm text-forest-700">
+            <Award className="w-3.5 h-3.5" />
+            <span className="text-forest-500">及格門檻</span>
+            <span className="font-semibold text-forest-800">{course.passScore} 分</span>
+          </span>
         </div>
       </div>
+
+      {/* 第二部分：課程內容說明卡片 */}
+      <div className="rounded-xl border border-forest-100 bg-forest-50/30 p-4 md:p-5">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-7 h-7 rounded-lg bg-mint-50 text-mint-600 flex items-center justify-center shrink-0">
+            <BookOpen className="w-4 h-4" />
+          </div>
+          <h4 className="text-sm font-semibold text-forest-800">課程說明</h4>
+        </div>
+        {course.description ? (
+          <p className="text-sm text-forest-700 leading-relaxed whitespace-pre-line">
+            {course.description}
+          </p>
+        ) : (
+          <p className="text-sm text-forest-400 italic">
+            尚未填寫課程說明。請在課程與考試清單試算表中新增「課程說明」欄位內容。
+          </p>
+        )}
+      </div>
     </div>
+
   );
 }

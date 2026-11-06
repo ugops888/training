@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { AlertCircle, Play, PlayCircle, FileText, Image as ImageIcon, Maximize2, Minimize2 } from 'lucide-react';
 import { parseMaterials, EMBED_SANDBOX, type Material } from './materials';
+import { YT_CLIP_PX } from '../../data/config';
 
 function KindIcon({ kind, className }: { kind: Material['kind']; className?: string }) {
   if (kind === 'pdf') return <FileText className={className} />;
@@ -26,7 +27,7 @@ export default function MaterialViewer({ title, raw }: { title: string; raw: str
 
   return (
     <div className="bg-white rounded-2xl shadow-card border border-forest-50 overflow-hidden">
-      <div className="relative bg-forest-900" style={boxStyle}>
+      <div className="relative bg-forest-900 overflow-hidden" style={boxStyle}>
         {current?.kind === 'youtube' && started !== current.src && (
           // 自訂封面：先不載入 YouTube 播放器，避免出現「稍後觀看」「分享」按鈕；按下播放才載入並自動播放
           <button
@@ -61,7 +62,10 @@ export default function MaterialViewer({ title, raw }: { title: string; raw: str
               key={current.src}
               src={current.kind === 'youtube' ? `${current.src}&autoplay=1` : current.src}
               title={title}
-              className="absolute inset-0 w-full h-full"
+              className={current.kind === 'youtube' ? 'absolute left-0 w-full' : 'absolute inset-0 w-full h-full'}
+              // YouTube：播放器比顯示區域上下各多出 YT_CLIP_PX，超出的部分被裁掉，
+              // 影片（置中、等比例）剛好留在可見範圍，YouTube 貼在上下邊緣的按鈕就看不到
+              style={current.kind === 'youtube' ? { top: -YT_CLIP_PX, height: `calc(100% + ${YT_CLIP_PX * 2}px)` } : undefined}
               sandbox={EMBED_SANDBOX}
               allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
               referrerPolicy="strict-origin-when-cross-origin"
