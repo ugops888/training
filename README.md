@@ -135,3 +135,9 @@ npm run build    # 產生 dist 資料夾
 ## 資料來源
 
 正式模式下，資料由 Apps Script 後端（`apps-script/Code.gs`）依登入身分從 Google 試算表讀取。各分頁的 gid 與可讀取的頁面權限，設定在 `Code.gs` 的 `SHEET_ACCESS`；網站端用到的 gid 在 `src/data/sheetData.ts` 與 `src/data/directData.ts`。
+
+## 門市排列順序（開店順序）
+「在職人員概況」的各門市人員統計與門市異動統計，依「門市對照表」分頁（gid 593792740）排序：
+- 分頁第一列需有「門市」欄；由上到下依開店先後排列即可。
+- 若另有「開店日期」欄且每間都有填，則改依日期由早到晚排序。
+- 不在對照表內的門市會排在最後。

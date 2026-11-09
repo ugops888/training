@@ -68,6 +68,42 @@ export interface DirectData {
   exams: ExamRecord[];
   courseDefs: CourseExamDef[];
   stores: string[];
+  storeOrder: string[]; // 門市開店順序（來自「門市對照表」，由早到晚；讀不到則為空）
+}
+
+// --- 門市開店順序：讀「門市對照表」，有「開店日期」欄就依日期，否則依分頁由上到下的順序 ---
+async function fetchStoreOrder(): Promise<string[]> {
+  try {
+    const rows = await fetchSheet(GID.storeMap);
+    const header = (rows[0] ?? []).map((h) => (h || '').trim());
+    let nameCol = header.findIndex((h) => /門市|店名|部門/.test(h));
+    if (nameCol < 0) nameCol = 0;
+    const dateCol = header.findIndex((h) => /開店|開幕|開業|營業日|日期/.test(h));
+    const list: { store: string; idx: number; date: string }[] = [];
+    rows.slice(1).forEach((r, idx) => {
+      const raw = (r[nameCol] || '').trim();
+      if (!raw) return;
+      const date = dateCol >= 0 ? normalizeDate((r[dateCol] || '').trim()) || '' : '';
+      list.push({ store: cleanStore(raw), idx, date });
+    });
+    if (dateCol >= 0 && list.every((x) => x.date)) {
+      list.sort((a, b) => (a.date === b.date ? a.idx - b.idx : a.date < b.date ? -1 : 1));
+    }
+    return Array.from(new Set(list.map((x) => x.store)));
+  } catch {
+    return [];
+  }
+}
+
+// 依開店順序排序；不在對照表內的門市排在最後（依名稱）
+export function sortByOpening(stores: string[], order: string[]): string[] {
+  const pos = new Map(order.map((s, i) => [s, i]));
+  return [...stores].sort((a, b) => {
+    const pa = pos.has(a) ? (pos.get(a) as number) : Infinity;
+    const pb = pos.has(b) ? (pos.get(b) as number) : Infinity;
+    if (pa !== pb) return pa < pb ? -1 : 1;
+    return a.localeCompare(b, 'zh');
+  });
 }
 
 // --- 課程/考試定義 ---
@@ -369,10 +405,11 @@ async function fetchExamRecords(defs: CourseExamDef[]): Promise<ExamRecord[]> {
 
 export async function fetchDirectData(): Promise<DirectData> {
   const defs = await fetchCourseDefs();
-  const [{ employees, active, stores }, courses, exams] = await Promise.all([
+  const [{ employees, active, stores }, courses, exams, storeOrder] = await Promise.all([
     fetchEmployees(),
     fetchCourseRecords(defs),
     fetchExamRecords(defs),
+    fetchStoreOrder(),
   ]);
   return {
     employees,
@@ -381,6 +418,7 @@ export async function fetchDirectData(): Promise<DirectData> {
     exams,
     courseDefs: defs,
     stores,
+    storeOrder,
   };
 }
 
@@ -488,7 +526,20 @@ export function buildPromotionAdvice(
         });
       }
     }
-  } else if (pos === '組長') {
+  } else if (pos === '組長' || pos === '店長') {
+    // 組長、店長若有基礎課程未完成，同樣列入提醒（與課程總覽的未完課人數一致）
+    const incompleteBasic = basicDefs.filter((d) => !hasCompletedCourse(emp.name, d.name, courses, exams));
+    if (incompleteBasic.length > 0) {
+      advices.push({
+        name: emp.name,
+        store: emp.store,
+        position: pos,
+        type: 'incomplete_basic',
+        message: `${incompleteBasic.map((d) => d.name).join('、')}課程尚未完成，請盡速完成`,
+      });
+    }
+  }
+  if (pos === '組長') {
     const leaderDone = completedAll(leaderDefs);
     if (leaderDone) {
       advices.push({

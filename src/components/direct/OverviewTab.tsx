@@ -1,13 +1,13 @@
 import { useMemo, useState } from 'react';
 import { Users, UserCheck, UserPlus, Store, Search, TrendingUp, TrendingDown } from 'lucide-react';
-import type { DirectData, EmployeeRow } from '../../data/directData';
+import { sortByOpening, type DirectData, type EmployeeRow } from '../../data/directData';
 
 interface Props {
   data: DirectData;
 }
 
 export default function OverviewTab({ data }: Props) {
-  const { activeEmployees: active, employees } = data;
+  const { activeEmployees: active, employees, storeOrder } = data;
 
   // 總覽卡片
   const totalActive = active.length;
@@ -31,10 +31,8 @@ export default function OverviewTab({ data }: Props) {
       if (e.position === '組長') v.leader++;
       map.set(e.store, v);
     }
-    return Array.from(map.entries())
-      .map(([store, v]) => ({ store, ...v }))
-      .sort((a, b) => a.store.localeCompare(b.store, 'zh'));
-  }, [active]);
+    return sortByOpening(Array.from(map.keys()), storeOrder).map((store) => ({ store, ...(map.get(store) as NonNullable<ReturnType<typeof map.get>>) }));
+  }, [active, storeOrder]);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -113,7 +111,7 @@ export default function OverviewTab({ data }: Props) {
       </div>
 
       {/* 動態流動率 */}
-      <TurnoverSection employees={employees} active={active} />
+      <TurnoverSection employees={employees} active={active} storeOrder={storeOrder} />
     </div>
   );
 }
@@ -166,8 +164,8 @@ function monthKey(dateStr: string): string | null {
   return m ? `${m[1]}-${m[2]}` : null;
 }
 
-function TurnoverSection({ employees, active }: { employees: EmployeeRow[]; active: EmployeeRow[] }) {
-  const stores = useMemo(() => Array.from(new Set(active.map((e) => e.store))).sort((a, b) => a.localeCompare(b, 'zh')), [active]);
+function TurnoverSection({ employees, active, storeOrder }: { employees: EmployeeRow[]; active: EmployeeRow[]; storeOrder: string[] }) {
+  const stores = useMemo(() => sortByOpening(Array.from(new Set(active.map((e) => e.store))), storeOrder), [active, storeOrder]);
   const months = useMemo(() => {
     const set = new Set<string>();
     for (const e of employees) {
@@ -223,7 +221,7 @@ function TurnoverSection({ employees, active }: { employees: EmployeeRow[]; acti
     <div className="bg-white rounded-2xl shadow-card border border-forest-50 overflow-hidden">
       <div className="px-5 py-4 border-b border-forest-50 flex items-center gap-2">
         <TrendingUp className="w-5 h-5 text-mint-600" />
-        <h3 className="font-semibold text-forest-900">動態流動率（異動統計）</h3>
+        <h3 className="font-semibold text-forest-900">門市異動統計</h3>
       </div>
       <div className="px-5 py-4 border-b border-forest-50">
         <div className="flex flex-col sm:flex-row gap-3">
@@ -270,7 +268,7 @@ function TurnoverSection({ employees, active }: { employees: EmployeeRow[]; acti
 
       {/* 加總數據 */}
       <div className="px-5 py-4 border-b border-forest-50 bg-forest-50/30">
-        <p className="text-xs font-semibold text-forest-600 mb-3">全公司加總</p>
+        <p className="text-xs font-semibold text-forest-600 mb-3">全門市加總</p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <TurnoverStat label="當月入職人數" value={totals.hired} unit="人" />
           <TurnoverStat label="入職率" value={totals.hireRate} unit="%" />
