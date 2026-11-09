@@ -133,9 +133,9 @@ export default function TrainingPlatformPage() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="bg-white rounded-2xl shadow-card border border-forest-50 p-4 md:p-5">
-        <div className="flex flex-col lg:flex-row lg:items-center gap-3">
+    <div className="space-y-3">
+      <div className="bg-white rounded-2xl shadow-card border border-forest-50 px-4 md:px-5 py-3.5 md:h-[72px] md:py-0 md:flex md:items-center">
+        <div className="flex flex-col lg:flex-row lg:items-center gap-3 w-full">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-forest-400" />
             <input
@@ -150,7 +150,7 @@ export default function TrainingPlatformPage() {
       </div>
 
       {/* 左：課程清單（寬 200px，高度與右側整欄相同、內容在清單內捲動）／右：課程說明 → 簽到與考試 → 課程影片 */}
-      <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-3">
         <div className="relative">
           <CourseListPanel
             groups={filteredGroups}
@@ -160,7 +160,7 @@ export default function TrainingPlatformPage() {
             onToggleCollapse={toggleCollapse}
           />
         </div>
-        <div className="space-y-4 min-w-0">
+        <div className="space-y-3 min-w-0">
           {selected && (
             <>
               <CourseInfoCard course={selected} />
@@ -193,7 +193,7 @@ function CourseListPanel({
   onToggleCollapse: (cat: string) => void;
 }) {
   return (
-    <div className="bg-white rounded-2xl shadow-card border border-forest-50 overflow-hidden flex flex-col max-h-[60vh] lg:max-h-none lg:absolute lg:inset-0">
+    <div className="bg-white rounded-2xl shadow-card border border-forest-50 overflow-hidden flex flex-col max-h-[28vh] w-[70%] lg:w-auto lg:max-h-none lg:absolute lg:inset-0">
       <div className="px-4 lg:px-2 py-3 border-b border-forest-50 flex items-center gap-2">
         <BookOpen className="w-4 h-4 text-mint-600 lg:hidden" />
         <h3 className="text-sm font-semibold text-forest-900">課程清單</h3>
@@ -300,7 +300,7 @@ function VideoPlayerPanel({ course }: { course: CourseExamDef | null }) {
 /** 課程說明卡：標題、類別、時數、及格門檻與課程說明 */
 function CourseInfoCard({ course }: { course: CourseExamDef }) {
   return (
-    <div className="bg-white rounded-2xl shadow-card border border-forest-50 p-5 md:p-6 space-y-5">
+    <div className="bg-white rounded-2xl shadow-card border border-forest-50 px-5 py-4 md:py-3 md:h-[200px] flex flex-col gap-3 overflow-hidden">
       {/* 第一部分：頂部標題與數據卡片 */}
       <div>
         {/* 第一行：課程主標題 */}
@@ -335,19 +335,19 @@ function CourseInfoCard({ course }: { course: CourseExamDef }) {
       </div>
 
       {/* 第二部分：課程內容說明卡片 */}
-      <div className="rounded-xl border border-forest-100 bg-forest-50/30 p-4 md:p-5">
-        <div className="flex items-center gap-2 mb-3">
+      <div className="rounded-xl border border-forest-100 bg-forest-50/30 p-3 md:p-2.5 md:h-[90px] md:shrink-0 flex flex-col">
+        <div className="flex items-center gap-2 mb-2 md:mb-1.5 shrink-0">
           <div className="w-7 h-7 rounded-lg bg-mint-50 text-mint-600 flex items-center justify-center shrink-0">
             <BookOpen className="w-4 h-4" />
           </div>
           <h4 className="text-sm font-semibold text-forest-800">課程說明</h4>
         </div>
         {course.description ? (
-          <p className="text-sm text-forest-700 leading-relaxed whitespace-pre-line">
+          <p className="text-sm text-forest-700 leading-relaxed whitespace-pre-line md:flex-1 md:min-h-0 md:overflow-y-auto">
             {course.description}
           </p>
         ) : (
-          <p className="text-sm text-forest-400 italic">
+          <p className="text-sm text-forest-400 italic md:flex-1 md:min-h-0 md:overflow-y-auto">
             尚未填寫課程說明。請在課程與考試清單試算表中新增「課程說明」欄位內容。
           </p>
         )}

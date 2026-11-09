@@ -134,7 +134,7 @@ function Main({ account, onLogout }: { account: Account; onLogout: () => void })
           notice={notice}
           onMenuClick={() => setSidebarOpen(true)}
         />
-        <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-x-hidden">
+        <main className="flex-1 p-4 md:p-7 overflow-x-hidden">
           <div key={page} className="animate-fade-in">
             {allowed.length === 0 && (
               <p className="text-center text-forest-600 py-20">此帳號尚未開放任何頁面，請聯絡管理員。</p>
@@ -147,9 +147,6 @@ function Main({ account, onLogout }: { account: Account; onLogout: () => void })
             {allowed.includes('student') && page === 'student' && <StudentHistoryPage />}
           </div>
         </main>
-        <footer className="px-4 md:px-8 py-4 text-center text-xs text-forest-400 border-t border-forest-50 bg-white/60">
-          {notice}
-        </footer>
       </div>
 
       {/* Toast 通知 */}

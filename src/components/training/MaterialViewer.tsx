@@ -26,6 +26,42 @@ export default function MaterialViewer({ title, raw }: { title: string; raw: str
 
   return (
     <div className="bg-white rounded-2xl shadow-card border border-forest-50 overflow-hidden">
+      {/* 教材切換與放大畫面：放在影片上方 */}
+      {current && (
+        <div className="px-4 py-2.5 flex items-center justify-between gap-3 flex-wrap border-b border-forest-50">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {items.length > 1 ? (
+              items.map((m, i) => (
+                <button
+                  key={`${m.url.slice(0, 80)}-${i}`}
+                  type="button"
+                  onClick={() => select(i)}
+                  aria-pressed={i === idx}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                    i === idx ? 'bg-mint-500 text-white' : 'bg-forest-50 text-forest-700 hover:bg-forest-100'
+                  }`}
+                >
+                  <KindIcon kind={m.kind} className="w-3.5 h-3.5" />
+                  教材 {i + 1} · {m.label}
+                </button>
+              ))
+            ) : (
+              <span className="inline-flex items-center gap-1.5 text-xs text-forest-500">
+                <KindIcon kind={current.kind} className="w-3.5 h-3.5" />
+                {current.label}
+              </span>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => setLarge((v) => !v)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-forest-700 bg-forest-50 hover:bg-forest-100 transition-colors"
+          >
+            {large ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+            {large ? '縮小畫面' : '放大畫面'}
+          </button>
+        </div>
+      )}
       <div className="relative bg-forest-900 overflow-hidden" style={boxStyle}>
         {current?.kind === 'youtube' && started !== current.src && (
           // 自訂封面：先不載入 YouTube 播放器，避免出現「稍後觀看」「分享」按鈕；按下播放才載入並自動播放
@@ -122,41 +158,6 @@ export default function MaterialViewer({ title, raw }: { title: string; raw: str
         )}
       </div>
 
-      {current && (
-        <div className="px-4 py-2.5 flex items-center justify-between gap-3 flex-wrap border-t border-forest-50">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {items.length > 1 ? (
-              items.map((m, i) => (
-                <button
-                  key={`${m.url.slice(0, 80)}-${i}`}
-                  type="button"
-                  onClick={() => select(i)}
-                  aria-pressed={i === idx}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                    i === idx ? 'bg-mint-500 text-white' : 'bg-forest-50 text-forest-700 hover:bg-forest-100'
-                  }`}
-                >
-                  <KindIcon kind={m.kind} className="w-3.5 h-3.5" />
-                  教材 {i + 1} · {m.label}
-                </button>
-              ))
-            ) : (
-              <span className="inline-flex items-center gap-1.5 text-xs text-forest-500">
-                <KindIcon kind={current.kind} className="w-3.5 h-3.5" />
-                {current.label}
-              </span>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={() => setLarge((v) => !v)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-forest-700 bg-forest-50 hover:bg-forest-100 transition-colors"
-          >
-            {large ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
-            {large ? '縮小畫面' : '放大畫面'}
-          </button>
-        </div>
-      )}
     </div>
   );
 }

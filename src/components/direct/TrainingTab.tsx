@@ -66,6 +66,23 @@ export default function TrainingTab({ data }: Props) {
 
 /* ========== 一、建議區 ========== */
 
+// 課程層級：2=店長課程、1=組長課程、0=一般正職課程
+function courseLevel(d: { category: string; rawName: string; name: string }): number {
+  const cat = d.category || '';
+  if (cat.includes('店長')) return 2;
+  if (cat.includes('組長')) return 1;
+  const t = `${cat}${d.rawName}${d.name}`;
+  if (t.includes('領航')) return 2;
+  if (t.includes('匠心')) return 1;
+  return 0;
+}
+// 員工職位層級：店長 2、組長 1、其餘正職 0
+function empLevel(e: { position: string }): number {
+  if (e.position.includes('店長')) return 2;
+  if (e.position.includes('組長')) return 1;
+  return 0;
+}
+
 function PromotionSection({
   regularEmps,
   defs,
@@ -180,8 +197,11 @@ function CoursesSection({
   // 課程總覽
   const overview = useMemo(() => {
     return courseDefs.map((d) => {
-      const shouldTrain = regularEmps.length;
-      const completed = regularEmps.filter((emp) =>
+      // 依課程對應職位計算應受訓人員：店長課程僅店長、組長課程含組長以上、其餘為全體正職
+      const need = courseLevel(d);
+      const eligible = regularEmps.filter((emp) => empLevel(emp) >= need);
+      const shouldTrain = eligible.length;
+      const completed = eligible.filter((emp) =>
         hasCompletedCourse(emp.name, d.name, courses, exams)
       ).length;
       const rate = shouldTrain > 0 ? Math.round((completed / shouldTrain) * 100) : 0;

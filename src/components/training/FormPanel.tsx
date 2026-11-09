@@ -126,7 +126,7 @@ function FormCard({ kind, title, raw }: { kind: FormKind; title: string; raw: st
 /** 簽到與考試：左右並排，點擊後彈出對應的 Google 表單；沒有表單的顯示「本課程無須簽到／測驗」 */
 export default function SignExamBar({ title, signInRaw, examRaw }: { title: string; signInRaw: string; examRaw: string }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <FormCard kind="signin" title={title} raw={signInRaw} />
       <FormCard kind="exam" title={title} raw={examRaw} />
     </div>

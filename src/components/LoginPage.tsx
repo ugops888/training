@@ -79,7 +79,7 @@ export default function LoginPage({ onSubmit }: LoginPageProps) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row bg-[#f5f8f6]">
+    <div className="h-[100dvh] lg:h-auto lg:min-h-screen overflow-hidden lg:overflow-visible flex flex-col lg:flex-row bg-[#f5f8f6]">
       {imgFailed ? (
         <section className="relative lg:w-1/2 bg-forest-800 text-white flex flex-col items-center justify-center px-8 py-10 lg:py-0 overflow-hidden">
           <div className="hidden sm:block w-full max-w-xl"><Hero /></div>
@@ -89,7 +89,7 @@ export default function LoginPage({ onSubmit }: LoginPageProps) {
           <p className="mt-2 lg:mt-0 text-sm text-forest-200 tracking-widest">Training Dashboard</p>
         </section>
       ) : (
-        <section className="relative lg:w-1/2 h-56 sm:h-72 lg:h-auto bg-forest-800 overflow-hidden">
+        <section className="relative lg:w-1/2 h-[22dvh] shrink-0 lg:h-auto bg-forest-800 overflow-hidden">
           <img
             src={imgSrc}
             alt=""
@@ -100,19 +100,19 @@ export default function LoginPage({ onSubmit }: LoginPageProps) {
       )}
 
       <section
-        className="relative flex-1 flex flex-col items-center px-6 pb-10 min-h-screen lg:min-h-0"
-        style={green ? { backgroundColor: BRAND_GREEN, paddingTop: '44vh' } : { paddingTop: '2.5rem', justifyContent: 'center' }}
+        className={`relative flex-1 min-h-0 flex flex-col items-center px-6 pb-4 lg:pb-10 lg:min-h-0 ${green ? 'pt-[28dvh] lg:pt-[44vh]' : 'pt-6 lg:pt-10 justify-center'}`}
+        style={green ? { backgroundColor: BRAND_GREEN } : undefined}
       >
         {green && (
           <img
             src={rightSrc}
             alt=""
-            className="absolute inset-0 w-full h-full object-contain object-top pointer-events-none select-none"
+            className="absolute inset-x-0 top-0 w-full h-[27dvh] lg:inset-0 lg:h-full object-contain object-top pointer-events-none select-none"
             onError={() => setFailedRight(rightSrc)}
           />
         )}
         <form onSubmit={submit} className="relative w-full max-w-sm">
-          <div className="flex items-center justify-center gap-3 mb-6">
+          <div className="flex items-center justify-center gap-3 mb-3 lg:mb-6">
             {!green && (
               <div className="w-11 h-11 rounded-xl bg-mint-400 text-forest-900 flex items-center justify-center shadow-md">
                 <GraduationCap className="w-6 h-6" strokeWidth={2.2} />
@@ -171,7 +171,7 @@ export default function LoginPage({ onSubmit }: LoginPageProps) {
 
           {USE_DEMO_DATA && (
             <p
-              className={`mt-6 text-xs leading-relaxed rounded-lg px-3 py-2 ${
+              className={`mt-3 lg:mt-6 text-xs leading-relaxed rounded-lg px-3 py-2 ${
                 green ? 'text-white/90 bg-black/15' : 'text-forest-500 bg-forest-50'
               }`}
             >
@@ -179,7 +179,7 @@ export default function LoginPage({ onSubmit }: LoginPageProps) {
             </p>
           )}
         </form>
-        <p className={`relative mt-8 text-xs text-center max-w-sm ${green ? 'text-white/80' : 'text-forest-400'}`}>
+        <p className={`relative mt-4 lg:mt-8 text-[11px] lg:text-xs text-center max-w-sm lg:max-w-none lg:whitespace-nowrap ${green ? 'text-white/80' : 'text-forest-400'}`}>
           《聯發國際餐飲事業股份有限公司著作權所有，侵害必究，機密資料禁止外流》
         </p>
       </section>
